@@ -53,7 +53,7 @@ API 接受开关机请求不等于操作已经完成，Skill 要求继续检查�
 - `scripts/Read-Token.ps1`：MCP 内部使用的解密助手，请勿将其输出到聊天或日志。
 - `dist/server.mjs`：上述代码和协议库的可运行打包产物，无需运行时下载依赖。
 
-协议层使用 MCP 官方 TypeScript SDK `@modelcontextprotocol/server@2.2.0`、其 `core@2.2.0` 和输入校验库 `zod@4.6.5`。具体版本锁定在 `dependency-lock.json`，打包输入见 `dist/build-inputs.json`，许可证见 `THIRD_PARTY_NOTICES.txt`。这不意味着完全没有第三方库：AutoDL 业务逻辑由我们自建，MCP 协议和参数校验使用列出的通用库。
+协议层使用 MCP 官方 TypeScript SDK `@modelcontextprotocol/server@2.2.0`、其 `core@2.2.0` 和输入校验库 `zod@4.6.5`。具体版本锁定在 `tooling/package-lock.json`，许可证见 `THIRD_PARTY_NOTICES.txt`。本地构建会另生成 `dependency-lock.json` 副本和 `dist/build-inputs.json` 报告，两者不进入 Git。这不意味着完全没有第三方库：AutoDL 业务逻辑由我们自建，MCP 协议和参数校验使用列出的通用库。
 
 Token 只用于列出的 AutoDL 官方地址，请求不跟随重定向；创建等变更不自动重试。状态与详情按官方文档使用 GET 加 JSON Body。API 输出和错误均脱敏，失败时保留请求 ID。插件代码仍运行在当前用户权限下；DPAPI 不是对同一用户进程的隔离边界。
 

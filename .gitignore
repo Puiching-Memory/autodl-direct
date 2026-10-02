@@ -1,18 +1,58 @@
+# Local dependencies and caches
 node_modules/
+.npm/
+.cache/
+coverage/
+.nyc_output/
+
+# Local credentials; sanitized configuration examples may be committed
 .env
 .env.*
+!.env.example
+!.env.template
+.npmrc
+.ssh/
+id_rsa
+id_ed25519
 *.dpapi
 *.pem
 *.key
+*.ppk
 *.pfx
 *.p12
 credentials*.json
 token*.json
 token*.txt
-*.log
+
+# Local work, test artifacts, logs, and distribution archives
 work/
 tmp/
 artifacts/
+outputs/
 .codex/
+*.log
+npm-debug.log*
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+
+# Generated reports; tooling/package-lock.json is the canonical lockfile
+/plugins/autodl-direct/dependency-lock.json
+/plugins/autodl-direct/dist/build-inputs.json
+
+# dist/server.mjs is intentionally tracked: Git-based installation runs it directly.
+# Plugin manifests (.agents/, .codex-plugin/, .mcp.json) must also remain tracked.
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.vs/
+*.suo
+*.user
+*.swp
+*~
 .DS_Store
 Thumbs.db
+Desktop.ini
