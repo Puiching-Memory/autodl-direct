@@ -1,0 +1,18 @@
+{
+  "name": "autodl-direct",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node dist/server.mjs"
+  },
+  "description": "Self-owned AutoDL integration; runtime dependencies are bundled and documented.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Puiching-Memory/autodl-direct.git"
+  }
+}

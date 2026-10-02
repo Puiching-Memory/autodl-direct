@@ -1,0 +1,20 @@
+{
+  "name": "autodl-tools",
+  "interface": {
+    "displayName": "AutoDL Direct"
+  },
+  "plugins": [
+    {
+      "name": "autodl-direct",
+      "source": {
+        "source": "local",
+        "path": "./plugins/autodl-direct"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+name: Build and offline checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        node: ['22', '24']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install locked build dependencies
+        run: npm.cmd ci --prefix plugins/autodl-direct/tooling --ignore-scripts --no-audit --no-fund
+      - name: Build bundled runtime
+        run: node plugins/autodl-direct/tooling/build.mjs
+      - name: Run offline contract and MCP checks
+        run: node --test plugins/autodl-direct/tooling/verify.test.mjs
+      - name: Parse PowerShell scripts
+        shell: pwsh
+        run: |
+          $taskErrors = @()
+          Get-ChildItem -LiteralPath plugins/autodl-direct/scripts -Filter '*.ps1' | ForEach-Object {
+            $taskTokens = $null
+            $taskParseErrors = $null
+            $null = [Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$taskTokens, [ref]$taskParseErrors)
+            $taskErrors += $taskParseErrors
+          }
+          if ($taskErrors.Count -gt 0) { throw ($taskErrors | Out-String) }

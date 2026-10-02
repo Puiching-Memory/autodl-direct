@@ -1,0 +1,31 @@
+{
+  "name": "autodl-direct",
+  "version": "0.1.1",
+  "description": "本地自建的 AutoDL 官方 API 集成。",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "AutoDL Direct",
+    "shortDescription": "直接管理 AutoDL GPU 实例",
+    "longDescription": "本机运行的 AutoDL Pro 实例管理工具，直接请求官方 API，并配合系统 SSH 执行任务。由本地工作区自建，与 AutoDL 官方无隶属关系。",
+    "developerName": "Puiching-Memory",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": "使用 AutoDL Direct 检查本机配置，并查询我的余额和 Pro 实例。",
+    "brandColor": "#0F766E",
+    "brandColorDark": "#2DD4BF",
+    "composerIcon": "./assets/icon.svg",
+    "composerIconDark": "./assets/icon-dark.svg",
+    "logo": "./assets/logo.svg",
+    "logoDark": "./assets/logo-dark.svg"
+  },
+  "author": {
+    "name": "Puiching-Memory",
+    "url": "https://github.com/Puiching-Memory"
+  },
+  "repository": "https://github.com/Puiching-Memory/autodl-direct",
+  "license": "MIT"
+}

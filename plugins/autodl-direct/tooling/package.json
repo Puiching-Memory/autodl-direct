@@ -1,0 +1,11 @@
+{
+  "name": "autodl-direct-build",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.2.0",
+    "@modelcontextprotocol/client": "2.2.0",
+    "zod": "4.6.5",
+    "esbuild": "0.25.12"
+  }
+}
