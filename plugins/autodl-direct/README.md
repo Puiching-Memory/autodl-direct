@@ -21,6 +21,20 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Configure-Toke
 
 也可由启动 Codex 的本机环境提供 `AUTODL_TOKEN`，其优先级高于 DPAPI 凭据。可用 `AUTODL_CREDENTIAL_FILE` 指定 DPAPI 文件位置。
 
+## 查询故障排查
+
+优先使用聊天暴露的 MCP 工具。`autodl_setup_status` 只检查凭据存在，不保证当前执行进程能解密。`CREDENTIALS_UNREADABLE` 可能来自受限进程、Windows 用户或运行环境差异，不代表 Token 无效，无需立即重新配置。
+
+如果聊天没有暴露 MCP 工具、但可在本机执行，Skill 会调用包内只读入口，并按 Codex 的权限审批使用配置凭据的 Windows 用户上下文。在当前 Windows 用户的本机终端也可运行：
+
+```powershell
+node .\scripts\query-account.mjs account 1 100
+```
+
+该入口复用同一套 API 校验和脱敏代码，只支持 `status`（离线检查）、`balance`（余额）、`instances`（一页 Pro 实例）和 `account`（余额加一页 Pro 实例）。后两项接受页码和每页数量，默认 `1 100`；根据返回的 `max_page` / `result_total` 继续翻页。错误返回脱敏 JSON 和非零退出码，不支持 Token 参数或实例变更。
+
+不要在受限 shell 临时导入源码模拟工具，也不要直接调用 `Read-Token.ps1` 输出凭据。若当前聊天只有云端执行能力，应切换到有本机访问和 MCP 工具的 Codex 聊天；本机 DPAPI 凭据无法直接用于云端进程。更新插件后新开聊天，使新版 Skill 生效。
+
 ## 实现的工具
 
 | 工具 | 功能 |
@@ -51,6 +65,7 @@ API 接受开关机请求不等于操作已经完成，Skill 要求继续检查�
 - `src/server.mjs`：注册 MCP 工具并启动本地 stdio 进程。
 - `scripts/Configure-Token.ps1`：交互式配置本机加密凭据。
 - `scripts/Read-Token.ps1`：MCP 内部使用的解密助手，请勿将其输出到聊天或日志。
+- `scripts/query-account.mjs`：复用打包运行产物的只读查询入口，不暴露凭据或实例变更。
 - `dist/server.mjs`：上述代码和协议库的可运行打包产物，无需运行时下载依赖。
 
 协议层使用 MCP 官方 TypeScript SDK `@modelcontextprotocol/server@2.2.0`、其 `core@2.2.0` 和输入校验库 `zod@4.6.5`。具体版本锁定在 `tooling/package-lock.json`，许可证见 `THIRD_PARTY_NOTICES.txt`。本地构建会另生成 `dependency-lock.json` 副本和 `dist/build-inputs.json` 报告，两者不进入 Git。这不意味着完全没有第三方库：AutoDL 业务逻辑由我们自建，MCP 协议和参数校验使用列出的通用库。

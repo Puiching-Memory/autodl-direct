@@ -81,7 +81,7 @@ export async function loadToken(env = process.env) {
     if (!stdout.trim()) throw new Error('empty');
     return stdout.trim();
   } catch {
-    throw new SafeError('CREDENTIALS_UNREADABLE', '无法解密本机凭据。请在当前 Windows 用户下重新运行 Configure-Token.ps1。');
+    throw new SafeError('CREDENTIALS_UNREADABLE', '当前进程无法读取本机加密凭据。请先检查插件连接、运行权限和 Windows 用户；此错误不代表 Token 无效，无需立即重新配置。');
   }
 }
 

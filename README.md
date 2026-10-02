@@ -5,9 +5,9 @@
   <img src="plugins/autodl-direct/assets/logo.svg" alt="AutoDL Direct" width="96" height="96">
 </picture>
 
-本地运行的 Codex 插件，直接调用 AutoDL 官方 API 管理 Pro 实例，配合系统 SSH 完成远程任务。当前为 **Windows 预览版 0.1.2**，由此私有仓库分发，采用 MIT 许可证。
+本地运行的 Codex 插件，直接调用 AutoDL 官方 API 管理 Pro 实例，配合系统 SSH 完成远程任务。当前为 **Windows 预览版 0.1.3**，由此私有仓库分发，采用 MIT 许可证。
 
-这是独立开发的非官方集成，与 AutoDL、OpenAI 无隶属或合作关系。已验证本机加密凭据读取和真实账户只读余额查询；实例管理、GPU 操作和 SSH 任务尚未实测。详细结果见 [验证记录](plugins/autodl-direct/VERIFICATION.md)。
+这是独立开发的非官方集成，与 AutoDL、OpenAI 无隶属或合作关系。已验证本机加密凭据读取、真实账户只读余额和 Pro 实例列表查询；实例变更、GPU 操作和 SSH 任务尚未实测。详细结果见 [验证记录](plugins/autodl-direct/VERIFICATION.md)。
 
 ## 安装
 
@@ -40,6 +40,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\plugins\autodl-direct\
 输入隐藏；脚本只读查询余额验证 Token，然后通过 Windows DPAPI 加密保存到当前用户的 `%LOCALAPPDATA%\CodexAutoDL\token.dpapi`。不要向聊天提供 Token，也不要提交到 Git。已有凭据无需重复配置。
 
 配置后在新聊天中说：“使用 AutoDL Direct 检查配置，查询我的余额和 Pro 实例。”
+
+如果聊天只加载了 Skill、没有加载 MCP 工具，Skill 会使用包内只读查询入口。它需要在配置凭据的 Windows 用户下运行，并遵守 Codex 的权限审批。受限进程能发现凭据文件却无法读取时，不应立即覆盖 Token；详见 [工具说明中的故障排查](plugins/autodl-direct/README.md#查询故障排查)。
 
 ## 功能与边界
 

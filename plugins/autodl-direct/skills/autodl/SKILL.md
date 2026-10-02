@@ -9,10 +9,24 @@ Use the bundled `autodl-direct` MCP tools. This is a local integration written i
 
 ## Connect and inspect
 
-1. Call `autodl_setup_status`. If credentials are missing, direct the user to run `scripts/Configure-Token.ps1` in a local terminal. Never ask the user to paste a Token into chat. Never run or display the internal `Read-Token.ps1` helper yourself.
+1. Call the exposed `autodl_setup_status` MCP tool. If the tools are not exposed in this chat, use the documented read-only fallback below; do not import `src/` or `dist/server.mjs` into an ad hoc shell to simulate tools. `credentialsConfigured=true` only means that a credential exists; it does not prove the current process can decrypt it. If credentials are missing, direct the user to run `scripts/Configure-Token.ps1` in a local terminal. Never ask the user to paste a Token into chat. Never run or display the internal `Read-Token.ps1` helper yourself.
 2. Use `autodl_balance`, `autodl_list_instances`, and the specific instance's status to establish the current account state. This API lists Pro instances only. A missing standard instance is not evidence that it was deleted.
 3. Use pagination when looking for a specific instance. Do not claim the first page contains all account resources.
 4. Consult the official pages in `references/official-api.md` for product permissions, GPU/image IDs, regions, pricing, and data retention. Do not treat the local documentation date as proof of current rules.
+
+## Read-only fallback when MCP tools are unavailable
+
+Some chats expose this Skill and local shell access without exposing this plugin's MCP tools. For account queries in that case, resolve the plugin root from this Skill's location (`../..` from its directory), then run its packaged `scripts/query-account.mjs`. Use the installed version's path, not a hard-coded cache version. This entry point reuses the bundled API client, keeps credentials internal, and supports only configuration, balance and paginated Pro-instance queries:
+
+```powershell
+node "<plugin-root>/scripts/query-account.mjs" account 1 100
+```
+
+`status` checks credential existence without decrypting it or contacting AutoDL. `balance` queries only the wallet. `instances <page_index> <page_size>` queries one page, and `account <page_index> <page_size>` queries both the wallet and one page. Inspect `pro_instances.data.max_page` / `result_total` and continue pagination as required; never describe an incomplete page as the entire account.
+
+On Windows, encrypted credentials belong to the Windows user who configured them. A restricted shell may discover the file but fail to read it in that user context. For an already-authorized account query, run this exact read-only entry point with `exec_command` using `sandbox_permissions="require_escalated"`, a short justification covering the current user's encrypted credential and AutoDL read-only network access, and no credential values in the command. Honor the host's approval decision. Do not disable the sandbox globally, extract the Token, or copy credentials into the workspace. Use an available Node.js executable; no runtime dependencies need installing.
+
+On `CREDENTIALS_UNREADABLE`, check the execution context and plugin connection before asking the user to reconfigure. Do not claim the Token is invalid based on that error. If this chat cannot execute on the local Windows host or the host denies the required permission, explain that boundary and direct the user to a local Codex chat with the actual MCP tools. Local DPAPI credentials cannot authenticate a cloud-only process. This fallback has no mutation commands; creating, starting, stopping or imaging instances requires the actual MCP tools and the existing authorization rules below.
 
 ## Perform requested actions
 

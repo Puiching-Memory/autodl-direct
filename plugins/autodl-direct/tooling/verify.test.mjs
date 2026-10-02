@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/client';
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
 import { AutoDLClient, createTools, requestJson, redact, SafeError, loadToken } from '../dist/server.mjs';
+import { runQuery } from '../scripts/query-account.mjs';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const plugin = path.resolve(directory, '..');
@@ -24,6 +25,57 @@ const find = (name, selected = client) => createTools(selected, testEnv).find(to
 const invoke = (name, input, selected) => {
   const tool = find(name, selected); return tool.run(tool.schema.parse(input));
 };
+
+test('read-only account fallback uses wallet and paginated list endpoints with credential redaction', async () => {
+  const requests = [];
+  const selected = new AutoDLClient({ tokenProvider: async () => dummyToken, transport: async request => {
+    requests.push(request);
+    return { code: 'Success', request_id: 'query-fixture', data: request.path.endsWith('/wallet/balance')
+      ? { assets: 12345, accumulate: 6789, voucher_balance: 500 }
+      : { list: [{ instance_uuid: 'pro-fixture', root_password: 'fixture-private-password' }], max_page: 3, result_total: 11 } };
+  } });
+  const result = await runQuery(['account', '2', '5'], { client: selected, env: testEnv });
+  assert.equal(result.balance.balance_yuan, 12.345);
+  assert.equal(result.pro_instances.data.max_page, 3);
+  assert.equal(result.pro_instances.data.result_total, 11);
+  assert.equal(result.readOnly, true);
+  assert.deepEqual(requests.map(request => request.path).sort(), [
+    '/api/v1/dev/instance/pro/list', '/api/v1/dev/wallet/balance'
+  ]);
+  assert.deepEqual(requests.find(request => request.path.endsWith('/pro/list')).body, { page_index: 2, page_size: 5 });
+  assert.ok(!JSON.stringify(result).includes(dummyToken));
+  assert.ok(!JSON.stringify(result).includes('fixture-private-password'));
+});
+
+test('account fallback rejects mutation names, credential arguments and invalid pagination before credential access', async () => {
+  let credentialReads = 0;
+  const selected = new AutoDLClient({ tokenProvider: async () => { credentialReads++; throw new Error('unexpected credential access'); } });
+  for (const args of [
+    ['autodl_power_off', 'pro-fixture'], ['create'], ['account', '1', '100', 'execute=true'],
+    ['balance', '--token', dummyToken], ['instances', '0'], ['instances', '1', '101'],
+    ['instances', '1', '1.5'], ['instances', '999999999999999999999']
+  ]) {
+    await assert.rejects(() => runQuery(args, { client: selected, env: testEnv }),
+      error => error.code === 'USAGE' && !error.message.includes(dummyToken));
+  }
+  assert.equal(credentialReads, 0);
+});
+
+test('packaged account command emits safe JSON and a nonzero exit on missing credentials', async () => {
+  const entrypoint = path.join(plugin, 'scripts/query-account.mjs');
+  const status = await promisify(execFile)(process.execPath, [entrypoint, 'status'], { env: testEnv });
+  assert.equal(JSON.parse(status.stdout).credentialsConfigured, false);
+  assert.equal(status.stderr, '');
+  await assert.rejects(() => promisify(execFile)(process.execPath, [entrypoint, 'balance'], { env: testEnv }), error => {
+    const result = JSON.parse(error.stdout);
+    assert.equal(error.code, 1);
+    assert.equal(result.isError, true);
+    assert.equal(result.code, 'CREDENTIALS_MISSING');
+    assert.equal(error.stderr, '');
+    assert.ok(!error.stdout.includes(dummyToken));
+    return true;
+  });
+});
 
 test('Windows DPAPI credentials load despite conflicting inherited PowerShell modules', {
   skip: process.platform !== 'win32', timeout: 30000

@@ -2,6 +2,8 @@
 
 插件在当前用户权限下运行。Windows DPAPI 加密静态存储的 AutoDL Token，不能隔离同一用户下的其他进程。`AUTODL_TOKEN` 环境变量优先于 DPAPI 凭据。
 
+受限 shell 与配置凭据的 Windows 用户可能具有不同的访问或解密能力。凭据读取失败不证明 Token 无效；不要为此把 Token 复制到工作区。包内 `scripts/query-account.mjs` 只提供配置、余额和分页实例列表查询，遵守宿主的权限审批，不修改全局沙箱设置。
+
 Token 只发送到列出的官方接口。请求不跟随重定向，变更不自动重试，密码和 Jupyter Token 会脱敏。系统 SSH 使用现有密钥或配置，不自动收集实例密码。
 
 不要提交 Token、DPAPI 文件、SSH 私钥、带凭据的 URL 或未脱敏日志。若误提交，应立即撤销相应凭据；删除文件不能撤销已泄露的凭据。
