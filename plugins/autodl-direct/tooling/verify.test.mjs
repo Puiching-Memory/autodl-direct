@@ -1,12 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/client';
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
-import { AutoDLClient, createTools, requestJson, redact, SafeError } from '../dist/server.mjs';
+import { AutoDLClient, createTools, requestJson, redact, SafeError, loadToken } from '../dist/server.mjs';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const plugin = path.resolve(directory, '..');
@@ -21,6 +24,40 @@ const find = (name, selected = client) => createTools(selected, testEnv).find(to
 const invoke = (name, input, selected) => {
   const tool = find(name, selected); return tool.run(tool.schema.parse(input));
 };
+
+test('Windows DPAPI credentials load despite conflicting inherited PowerShell modules', {
+  skip: process.platform !== 'win32', timeout: 30000
+}, async () => {
+  const tempRoot = path.resolve(tmpdir());
+  const fixtureRoot = await mkdtemp(path.join(tempRoot, 'autodl-credential-test-'));
+  const fixtureFile = path.join(fixtureRoot, 'fixture.dpapi');
+  const moduleRoot = path.join(fixtureRoot, 'modules');
+  const moduleDirectory = path.join(moduleRoot, 'Microsoft.PowerShell.Security');
+  const cleanEnv = Object.fromEntries(Object.entries(process.env)
+    .filter(([key]) => key.toLowerCase() !== 'psmodulepath'));
+  const powershell = path.join(process.env.SystemRoot ?? process.env.SYSTEMROOT ?? 'C:\\Windows',
+    'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+  try {
+    await mkdir(moduleDirectory, { recursive: true });
+    await writeFile(path.join(moduleDirectory, 'Microsoft.PowerShell.Security.psd1'),
+      "@{ RootModule = 'Incompatible.psm1'; ModuleVersion = '1.0'; FunctionsToExport = @('ConvertTo-SecureString') }\n");
+    await writeFile(path.join(moduleDirectory, 'Incompatible.psm1'),
+      "function ConvertTo-SecureString { throw 'Simulated incompatible PowerShell module.' }\nExport-ModuleMember -Function ConvertTo-SecureString\n");
+    await promisify(execFile)(powershell, ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command',
+      "$ErrorActionPreference = 'Stop'; [IO.File]::WriteAllText($env:AUTODL_TEST_CREDENTIAL_FILE, (ConvertFrom-SecureString (ConvertTo-SecureString -String $env:AUTODL_TEST_DUMMY_TOKEN -AsPlainText -Force)))"],
+      { env: { ...cleanEnv, AUTODL_TEST_CREDENTIAL_FILE: fixtureFile, AUTODL_TEST_DUMMY_TOKEN: dummyToken },
+        windowsHide: true, timeout: 10000 });
+    for (const key of ['PSModulePath', 'PSMODULEPATH']) {
+      const actual = await loadToken({ ...cleanEnv, AUTODL_TOKEN: '', AUTODL_CREDENTIAL_FILE: fixtureFile,
+        [key]: moduleRoot });
+      assert.equal(actual, dummyToken);
+    }
+  } finally {
+    assert.equal(path.dirname(fixtureRoot), tempRoot);
+    assert.ok(path.basename(fixtureRoot).startsWith('autodl-credential-test-'));
+    await rm(fixtureRoot, { recursive: true, force: true });
+  }
+});
 
 test('all four mutation previews require no credentials or API requests', async () => {
   const never = new AutoDLClient({ tokenProvider: async () => { throw new Error('credential lookup forbidden'); },

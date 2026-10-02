@@ -5,9 +5,9 @@
   <img src="plugins/autodl-direct/assets/logo.svg" alt="AutoDL Direct" width="96" height="96">
 </picture>
 
-本地运行的 Codex 插件，直接调用 AutoDL 官方 API 管理 Pro 实例，配合系统 SSH 完成远程任务。当前为 **Windows 预览版 0.1.1**，由此私有仓库分发，采用 MIT 许可证。
+本地运行的 Codex 插件，直接调用 AutoDL 官方 API 管理 Pro 实例，配合系统 SSH 完成远程任务。当前为 **Windows 预览版 0.1.2**，由此私有仓库分发，采用 MIT 许可证。
 
-这是独立开发的非官方集成，与 AutoDL、OpenAI 无隶属或合作关系。真实账户 API、GPU 操作和 SSH 任务尚未实测；安装与离线验证见 [验证记录](plugins/autodl-direct/VERIFICATION.md)。
+这是独立开发的非官方集成，与 AutoDL、OpenAI 无隶属或合作关系。已验证本机加密凭据读取和真实账户只读余额查询；实例管理、GPU 操作和 SSH 任务尚未实测。详细结果见 [验证记录](plugins/autodl-direct/VERIFICATION.md)。
 
 ## 安装
 

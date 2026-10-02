@@ -68,10 +68,16 @@ export async function loadToken(env = process.env) {
   }
   try {
     const script = fileURLToPath(new URL('../scripts/Read-Token.ps1', import.meta.url));
-    const { stdout } = await promisify(execFile)('powershell.exe', [
+    // PowerShell 7 module paths can prevent Windows PowerShell from loading its
+    // own security module. Let the credential reader use the classic defaults.
+    const readerEnv = Object.fromEntries(Object.entries(env)
+      .filter(([key, value]) => key.toLowerCase() !== 'psmodulepath' && value !== undefined));
+    const powershell = path.join(env.SystemRoot ?? env.SYSTEMROOT ?? 'C:\\Windows',
+      'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+    const { stdout } = await promisify(execFile)(powershell, [
       '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
       '-File', script, '-CredentialFile', file
-    ], { windowsHide: true, timeout: 10000, maxBuffer: 65536 });
+    ], { env: readerEnv, windowsHide: true, timeout: 10000, maxBuffer: 65536 });
     if (!stdout.trim()) throw new Error('empty');
     return stdout.trim();
   } catch {

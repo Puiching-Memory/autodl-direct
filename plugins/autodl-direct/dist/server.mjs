@@ -20954,7 +20954,15 @@ async function loadToken(env = process.env) {
   }
   try {
     const script = fileURLToPath(new URL("../scripts/Read-Token.ps1", import.meta.url));
-    const { stdout } = await promisify(execFile)("powershell.exe", [
+    const readerEnv = Object.fromEntries(Object.entries(env).filter(([key, value]) => key.toLowerCase() !== "psmodulepath" && value !== void 0));
+    const powershell = path.join(
+      env.SystemRoot ?? env.SYSTEMROOT ?? "C:\\Windows",
+      "System32",
+      "WindowsPowerShell",
+      "v1.0",
+      "powershell.exe"
+    );
+    const { stdout } = await promisify(execFile)(powershell, [
       "-NoLogo",
       "-NoProfile",
       "-NonInteractive",
@@ -20964,7 +20972,7 @@ async function loadToken(env = process.env) {
       script,
       "-CredentialFile",
       file
-    ], { windowsHide: true, timeout: 1e4, maxBuffer: 65536 });
+    ], { env: readerEnv, windowsHide: true, timeout: 1e4, maxBuffer: 65536 });
     if (!stdout.trim()) throw new Error("empty");
     return stdout.trim();
   } catch {
@@ -21147,7 +21155,7 @@ function errorResult(error2) {
 
 // src/server.mjs
 function buildServer(client, env) {
-  const server = new McpServer({ name: "autodl-direct", version: "0.1.1" }, {
+  const server = new McpServer({ name: "autodl-direct", version: "0.1.2" }, {
     instructions: "\u672C\u5730\u81EA\u5EFA\u5DE5\u5177\u76F4\u63A5\u8BBF\u95EE AutoDL \u5B98\u65B9 API\uFF0C\u4EC5\u652F\u6301 Pro \u5B9E\u4F8B\u3002\u5148\u68C0\u67E5\u914D\u7F6E\u4E0E\u5B9E\u4F8B\u3002\u53D8\u66F4\u9ED8\u8BA4\u9884\u89C8\uFF1B\u7528\u6237\u5DF2\u6709\u6388\u6743\u53EF\u8986\u76D6\u771F\u5B9E\u6267\u884C\uFF0C\u65E0\u987B\u91CD\u590D\u7D22\u53D6\u540C\u4E00\u6388\u6743\u3002API \u63A5\u53D7\u8BF7\u6C42\u4E0D\u7B49\u4E8E\u64CD\u4F5C\u5B8C\u6210\uFF0C\u5FC5\u987B\u67E5\u8BE2\u72B6\u6001\u3002\u5DE5\u5177\u4E0D\u4F1A\u81EA\u52A8\u5173\u673A\uFF1B\u957F\u4EFB\u52A1\u4F7F\u7528\u7CFB\u7EDF SSH \u540E\u53F0\u8FD0\u884C\u5E76\u6309\u7EA6\u5B9A\u6536\u5C3E\u3002\u51ED\u636E\u4E0D\u5E94\u51FA\u73B0\u5728\u804A\u5929\u6216\u65E5\u5FD7\u3002"
   });
   for (const tool of createTools(client, env)) {
@@ -21181,6 +21189,7 @@ export {
   buildServer,
   createTools,
   errorResult,
+  loadToken,
   redact,
   requestJson
 };
