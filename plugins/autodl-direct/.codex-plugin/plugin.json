@@ -7,7 +7,7 @@
   "interface": {
     "displayName": "AutoDL Direct",
     "shortDescription": "直接管理 AutoDL GPU 实例",
-    "longDescription": "本机运行的 AutoDL Pro 实例管理工具，直接请求官方 API，并配合系统 SSH 执行任务。由本地工作区自建，与 AutoDL 官方无隶属关系。",
+    "longDescription": "在本机运行，直接访问 AutoDL 官方开发者 API。查询余额、Pro 实例和镜像，预览或执行创建、开关机及保存镜像；通过 Skill 配合系统 SSH 操作已有实例。由本地工作区自建，与 AutoDL 官方无隶属关系。",
     "developerName": "Puiching-Memory",
     "category": "Productivity",
     "capabilities": [
