@@ -1,49 +1,24 @@
-﻿# Registers the catalog that points to this exact source, then installs it.
+﻿# Installs from the repository catalog after checking its exact local source.
 $ErrorActionPreference = 'Stop'
 $taskPluginRoot = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
-$taskPluginParent = Split-Path -Parent $taskPluginRoot
-$taskCatalogCandidates = @($taskPluginRoot, $taskPluginParent, (Split-Path -Parent $taskPluginParent))
-$taskMarketplaceRoot = $null
-$taskCatalogName = $null
-foreach ($taskCandidate in $taskCatalogCandidates) {
-    $taskCatalogFile = Join-Path $taskCandidate '.agents\plugins\marketplace.json'
-    if (-not (Test-Path -LiteralPath $taskCatalogFile)) { continue }
-    $taskCatalog = Get-Content -LiteralPath $taskCatalogFile -Raw | ConvertFrom-Json
-    foreach ($taskEntry in $taskCatalog.plugins) {
-        if ($taskEntry.name -ne 'autodl-direct') { continue }
-        $taskSourcePath = if ($taskEntry.source -is [string]) { $taskEntry.source } else { $taskEntry.source.path }
-        if (-not $taskSourcePath -or -not $taskSourcePath.StartsWith('./')) { continue }
-        $taskResolvedSource = [IO.Path]::GetFullPath((Join-Path $taskCandidate $taskSourcePath))
-        if ($taskResolvedSource -eq $taskPluginRoot) {
-            $taskMarketplaceRoot = $taskCandidate
-            $taskCatalogName = $taskCatalog.name
-            break
-        }
-    }
-    if ($taskMarketplaceRoot) { break }
+$taskRepositoryRoot = Split-Path -Parent (Split-Path -Parent $taskPluginRoot)
+$taskCatalogFile = Join-Path $taskRepositoryRoot '.agents\plugins\marketplace.json'
+if (-not (Test-Path -LiteralPath $taskCatalogFile -PathType Leaf)) {
+    throw '请从完整的 autodl-direct Git 仓库运行安装脚本；缺少仓库目录清单。'
 }
-if (-not $taskMarketplaceRoot) {
-    $taskMarketplaceRoot = $taskPluginParent
-    $taskMarketplaceFile = Join-Path $taskMarketplaceRoot '.agents\plugins\marketplace.json'
-    if (Test-Path -LiteralPath $taskMarketplaceFile) {
-        throw '父目录已有其他插件目录配置。请在独立目录解压，或从包含本插件的仓库根目录注册。'
-    }
-    $null = New-Item -ItemType Directory -Path (Split-Path -Parent $taskMarketplaceFile) -Force
-    $taskCatalogName = 'autodl-tools'
-    $taskCatalog = @{
-        name=$taskCatalogName
-        interface=@{displayName='AutoDL Direct'}
-        plugins=@(@{
-            name='autodl-direct'
-            source=@{source='local';path=('./' + (Split-Path -Leaf $taskPluginRoot))}
-            policy=@{installation='AVAILABLE';authentication='ON_USE'}
-            category='Productivity'
-        })
-    }
-    [IO.File]::WriteAllText($taskMarketplaceFile, ($taskCatalog | ConvertTo-Json -Depth 8), [Text.UTF8Encoding]::new($false))
+$taskCatalog = Get-Content -LiteralPath $taskCatalogFile -Raw | ConvertFrom-Json
+$taskEntries = @($taskCatalog.plugins | Where-Object { $_.name -eq 'autodl-direct' })
+if ($taskCatalog.name -ne 'autodl-tools' -or $taskEntries.Count -ne 1 -or
+    $taskEntries[0].source.source -ne 'local' -or -not $taskEntries[0].source.path -or
+    -not $taskEntries[0].source.path.StartsWith('./')) {
+    throw '仓库目录清单与 AutoDL Direct 不匹配。'
 }
-& codex plugin marketplace add $taskMarketplaceRoot
+$taskResolvedSource = [IO.Path]::GetFullPath((Join-Path $taskRepositoryRoot $taskEntries[0].source.path))
+if ($taskResolvedSource -ne $taskPluginRoot) {
+    throw '仓库目录清单未指向此插件源码。'
+}
+& codex plugin marketplace add $taskRepositoryRoot
 if ($LASTEXITCODE -ne 0) { throw '本地插件目录注册失败。' }
-& codex plugin add ('autodl-direct@' + $taskCatalogName)
+& codex plugin add ('autodl-direct@' + $taskCatalog.name)
 if ($LASTEXITCODE -ne 0) { throw '插件安装失败。' }
 Write-Output 'AutoDL Direct 已安装。请在新聊天中使用它，或重启插件连接。'

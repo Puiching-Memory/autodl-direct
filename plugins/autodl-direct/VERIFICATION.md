@@ -1,43 +1,119 @@
 # 验证记录
 
-验证日期：2026-10-02。版本：AutoDL Direct 0.1.3，GitHub 私有分发版。
+## 当前版本 0.1.6（2026-10-19）
 
-## 官方接口依据
+本机 Windows、Node.js 24.21.0。重新构建随包运行的 dist/server.mjs，运行 verify.test.mjs、instances.test.mjs、public-data.test.mjs：41 项通过、0 失败、0 跳过。测试覆盖真实清单启动、公共查询不读取账户凭据、固定 GET 地址、参数校验、分页完整性、空结果、字段变化、重定向、超时与响应大小上限。
 
-接口、鉴权和实例产品限制依据 [AutoDL 通用 API](https://www.autodl.com/docs/common_api/) 和 [Pro API](https://www.autodl.com/docs/instance_pro_api/)。插件格式依据 [Codex 官方插件文档](https://developers.openai.com/plugins/build/plugins)。本包由本地工作区自建，与 AutoDL 官方无隶属关系。
+使用 Codex 正常安装命令安装 0.1.6，未手工修改缓存。官方 MCP 客户端按安装清单启动，服务版本 0.1.6，发现 11 个工具。测试进程清除 Token 环境变量并使用不存在的凭据路径，配置查询确认 credentialsConfigured=false；公共目录工具的 6 个真实场景全部通过：
 
-## 本机实测
-
-本次复查环境：Windows、Node.js 26.5.0、Codex CLI 0.159.0-alpha.12.1。初始 0.1.0 版曾在 Codex CLI 0.159.2 上验证。插件声明最低 Node.js 22，GitHub CI 配置了 Node.js 22 和 24；此记录中的本机结果使用 Node.js 26.5.0。
-
-| 检查 | 结果 |
+| 场景 | 当次观测 |
 | --- | --- |
-| Portable 和 Codex 兼容清单、相对路径、运行文件 | 通过 |
-| 浅色和深色 SVG 图标、品牌色配置 | 文件和清单引用有效 |
-| 三个 PowerShell 脚本语法解析 | 0 个语法错误 |
-| Codex 注册插件目录、安装并启用插件 | 隔离配置验证通过；当前用户真实配置已安装并启用 |
-| GitHub 仓库布局下的安装脚本 | 正确找到仓库根目录；原有目录清单未被修改 |
-| Codex app-server 读取插件 | 正确识别插件界面、Skill 和 MCP 服务 |
-| Codex app-server 连接 MCP | 成功发现全部 10 个工具；`toolsError=null` |
-| MCP 官方客户端连接并调用 | 配置检查、参数预览、缺少凭据和错误输入处理通过 |
-| Windows DPAPI 凭据读取 | 已修复继承 PowerShell 7 模块目录时的兼容问题；使用默认 Windows PowerShell 模块目录 |
-| 真实账户只读余额及 Pro 列表查询 | 当前聊天的实际 MCP 工具读取凭据并查询成功；列表为空，尚未验证真实非空列表；不记录 Token、余额或账户标识 |
-| 受限 shell 与当前用户的凭据读取差异 | 同一版本及同一凭据在受限 shell 中返回 `CREDENTIALS_UNREADABLE`，经宿主批准的当前 Windows 用户进程查询成功 |
-| 包内只读查询入口 | 当前 Windows 用户进程调用 `query-account.mjs account 1 100` 成功查询余额和 Pro 列表；受限进程返回脱敏错误 JSON，未要求覆盖 Token |
-| 离线测试 | 15 项通过，0 项失败；包含只读入口的分页、脱敏、变更命令拒绝和退出码检查 |
+| Vimeo 搜索 | Vimeo-90k，路径 /root/autodl-pub/Vimeo-90k，目录显示 81.89 GB |
+| MOT17 搜索 | MOT17，路径 /root/autodl-pub/mot17，目录显示 5.46 GB |
+| 每页 100 的完整目录 | 39 项，result_total=39，complete_query_result=true |
+| 每页 10 的第一页 | 10 项，next_page_index=2，结果不完整 |
+| 每页 10 的第四页 | 9 项，没有下一页；单独最后一页仍不声称完整 |
+| 不匹配的名称 | 0 项，成功空结果 |
 
-离线测试覆盖：四种变更操作的预览不读取凭据、不联网；显式执行只发送一次请求；Pro ID 和数量等参数校验；余额单位换算；嵌套凭据与错误脱敏；GET JSON Body 和原样 Authorization；拒绝重定向；拒绝未知地址、路径和方法；变更不自动重试；打包后的 MCP 连接和工具发现；清单与资源引用；只读入口的分页请求、脱敏、变更及凭据参数拒绝、错误 JSON 和非零退出码。
+[真实公共查询证据](../../docs/evidence/2026-10-19-public-data-mcp.json) 保存查询参数、公共记录、分页、request_id、时间和工具信息；不包含账户秘密。接口来自官方控制台，不属于已承诺稳定的开发者 API。目录数和大小为当时目录字段，未实测文件字节数或目标实例挂载能力。本轮未创建、开关机 GPU 或执行训练。新版真实付费变更、SSH 和当前聊天原生工具刷新未验证。
 
-离线测试使用单独的测试配置，不修改真实账户凭据；模拟请求使用固定的无效测试凭据。DPAPI 回归测试只在临时目录加密并读取无效测试凭据，覆盖继承冲突模块目录的情况。本机安装验证另外检查了当前用户真实的 Codex 插件配置和工具加载。
+0.1.5 同时修复本机 Codex 将 PLUGIN_ROOT 占位符保留为字面量导致的启动错误，改为相对入口及工作目录；测试改为按真实清单启动。0.1.5 的安装后真实配置、余额和空实例列表调用成功，未在公共证据中提交账户金额。
 
-## 尚未实测
+以下为 2026-10-07 的历史验证记录，其版本、未发布与安装状态仅对应当日。
 
-真实账户的 Token 验证、DPAPI 加密保存、插件自动读取和只读余额、Pro 列表查询已在当前 Windows 用户下验证。真实 Pro 列表为空，尚未验证非空列表中的实例详情、创建、开关机或保存镜像。包内入口在本机进程中验证；截图对应的另一条聊天是否自动选择新版入口，需要该聊天加载新版 Skill 后确认。
+本轮日期：2026-10-07（Asia/Shanghai）。源码基线 `78585c9`，开发版 0.1.4 未发布；改进前安装版本为 0.1.3。独立克隆用户指定的插件仓库，未修改比赛项目。仓库未提供 AGENTS.md 或发布自动化；按 README 的锁定依赖、构建、离线检查流程更新随包运行的 dist/server.mjs，版本统一来自 Codex 清单，构建时打包到服务中。源码改进阶段未安装；随后按用户要求本机安装，记录如下。没有推送或发布。
 
-未实测真实实例的 SSH 登录、文件传输、训练任务或结果下载。Skill 提供流程指导，需要可用的 SSH 密钥或 SSH 配置，完成状态必须以远端证据确认。
+## 协议依据与实际兼容问题
 
-账户访问、GPU 资源供应、实际计费和 API 完成状态不能由离线测试证明。普通实例可以使用系统 SSH；本包实例管理 API 只覆盖 Pro。未包含实例释放、企业弹性部署、自动关机调度或预算上限。
+2026-10-07 读取 [官方 Pro API](https://api.autodl.com/docs/instance_pro_api/)：状态和详情仍标为 GET，参数示例为 JSON Body、instance_uuid。0.1.3 的方法和参数名与文档一致，因此不能断言旧实现把方法写错。
 
-## 自行复查
+对用户指定的已关机实例做只读对照；全部使用相同 API 主机、原样 Authorization、同一 ID，不跟随重定向，不试验 POST：
 
-`src/` 为业务源码，`dist/` 为可运行产物，`tooling/` 提供构建和测试代码及锁定依赖。按 README 中的命令可重新构建和运行测试。ZIP 包不包含凭据、开发依赖目录或本次测试的 Codex 配置。
+| 参数传输 | status | snapshot |
+| --- | --- | --- |
+| GET JSON Body | RequestParameterIsWrong | RequestParameterIsWrong |
+| GET Query | Success，shutdown | Success |
+| GET Body + Query | Success，shutdown | Success |
+
+[脱敏对照证据](../../docs/evidence/2026-10-07-compatibility.json) 保存每次 request_id。生产状态/详情改为 GET Query，并保留 Body 与组合形式的只读诊断入口。实测确定的是参数传输的兼容差异；服务端或中间代理为什么忽略文档中的 Body，仍未定位。没有推广到其他端点、账户、实例状态或请求方法。
+
+## 本轮真实只读验证
+
+使用重建的运行包，经宿主允许在配置凭据的 Windows 用户下调用；凭据只在客户端内部读取。Node.js 24.19.0，Windows。本轮未租卡、开机、关机、保存镜像、SSH 登录或传输。
+
+| 检查 | 结果与范围 |
+| --- | --- |
+| 余额 | 三个金额字段为有效数值；证据不保存金额 |
+| 非空 Pro 分页列表 | 找到指定实例，状态 shutdown；本账号只有一页 |
+| 生产状态接口 | GET Query 成功，source=status_api，shutdown |
+| 生产详情接口 | GET Query 成功，source=snapshot_api |
+| 安全连接信息 | 主机/端口/用户名字段有效；证据只保存布尔结果，不保存地址 |
+| 凭据脱敏 | root_password 与 jupyter_token 为 REDACTED；未核验实际 SSH 登录或本地密钥 |
+
+[真实只读证据](../../docs/evidence/2026-10-07-live-readonly.json) 包含时间、来源、request_id、参数形式、耗时和字段验证结果，不含凭据、主机、金额、原始数据或预测。
+
+## 离线与协议验证
+
+收敛范围后重新构建，27 项通过，0 失败，0 跳过。本机 Windows、Node.js 24.19.0。CI 保持 Windows Node.js 22/24，运行 verify.test.mjs 和 instances.test.mjs；本轮没有宣称远端 CI 已运行。
+
+- 原有默认预览、参数校验、余额换算、脱敏、地址/方法白名单、重定向拒绝、DPAPI 冲突模块回归继续通过。
+- GET Query 编码到 URL 且不发 Body；响应中断安全失败、总超时兜底；诊断入口只读。
+- 状态回退跨页查找、分页上限和错误响应处理；鉴权错误不被隐藏；详情部分回退不猜连接信息。
+- 变更仅发送一次；超时后只读核实；创建前快照和候选差集不冒称因果确认；预检失败不租机。
+- MCP 官方客户端发现 10 个工具，配置、预览、缺少凭据和错误输入调用通过；服务版本与唯一清单一致。
+- 安装脚本使用模拟 CLI 验证来源、缺少目录清单及 CLI 失败处理，不注册或安装实际插件；清单、共用图标、Skill、目录来源和运行产物路径验证通过；源码及重建运行包不再包含已移除的下载、缓存、传输和通用任务记录实现或导出。
+
+删除独立定时关机核验和对应测试；新增安装脚本行为回归，当前仍为 27 项。旧开发版的 39 项测试不计为当前结果。当前测试不读取真实 Token、不连接真实 SSH/SFTP、不执行 GPU 变更。训练和输出正确性仍由项目验证。
+
+
+## 本机安装验证
+
+2026-10-07 用户授权安装后，使用 Codex CLI 将 `autodl-tools` 的本地来源从旧工作区切换到本轮源码，安装 `autodl-direct@autodl-tools`。CLI 报告版本 0.1.4、installed=true、enabled=true；安装目录为 `%USERPROFILE%\.codex\plugins\cache\autodl-tools\autodl-direct\0.1.4`。旧源码与 AutoDL 凭据保留，没有手动修改缓存。
+
+从安装缓存启动 MCP，官方客户端发现 10 个工具，服务版本为 0.1.4。配置检查及关机预览通过；运行产物、清单、Skill、图标和凭据助手与源码摘要一致，已删除的重复清单和功能未出现在新版缓存。使用不存在的测试凭据路径，未读取真实凭据、调用 AutoDL API 或执行 GPU 变更。证据见 [安装验证](../../docs/evidence/2026-10-07-installation.json)。当前聊天的工具重新加载尚未验证；新开聊天或重启插件连接后使用新版。
+
+安装后更新了源码说明。再次安装以同步这部分说明时，CLI 的缓存备份返回 Windows 访问拒绝；未手动编辑缓存或改变权限。随后复查仍为 0.1.4、installed=true、enabled=true，安装副本的代码摘要及 MCP 启动验证继续通过。缓存说明保留首次安装时的快照，最新安装记录以本文件为准。
+
+## 此前 GPU 工作流证据
+
+用户提供的汇总记录确认此前任务余额、非空列表和关机成功，训练及预测完成后已取回输出。API 创建最终由浏览器替代，未验证成功；镜像仅验证 8 MiB 样本，实际权重使用完整校验的官方本机下载。训练恢复、传输、结果与提交由比赛项目完成，不算插件能力；此前租卡授权不延伸到本任务。
+
+旧文档的真实账号验证只有余额和空列表。本轮更新为上述分层记录；早期安装/app-server 发现结果是历史结果，新版本的缓存启动验证见上节。
+
+## 未验证能力与平台边界
+
+| 能力 | 当前状态 |
+| --- | --- |
+| 新版真实 API 创建、开机、保存镜像 | 未执行；需要独立授权及具体预算 |
+| 真实变更超时后的结果核实 | 离线故障注入通过；没有制造真实变更超时 |
+| 真实多页账户/实际状态故障后的回退 | 跨页及故障模拟通过；真实账号只有一页，Query 正常 |
+| 平台定时关机 | 由列表观测与 Skill 指导；未设置或实测真实 timer |
+| 本地/远程看护、硬预算上限 | 插件未实现，不能承诺 |
+| 下载/缓存/SSH/SFTP/训练记录/完成标准 | 属于 Agent 和项目；插件不提供这些通用功能 |
+| 实时价格/库存/环境兼容性 | 使用当时官方或控制台观测；未知明确报告，不猜 ID |
+| 浏览器权限、剪贴板、断连 | 宿主边界；保留原有权限和认证规则 |
+
+职责见 [仓库 README](../../README.md#功能与职责边界)，操作指导见 [Skill](skills/autodl/SKILL.md)。实例接受请求不等于完成；平台定时设置匹配不等于执行；停止训练不等于停止 GPU 计费。
+
+## 重复验证
+
+在仓库根目录：
+
+```powershell
+npm.cmd ci --prefix plugins/autodl-direct/tooling --ignore-scripts --no-audit --no-fund
+node plugins/autodl-direct/tooling/build.mjs
+node --test plugins/autodl-direct/tooling/verify.test.mjs plugins/autodl-direct/tooling/instances.test.mjs plugins/autodl-direct/tooling/public-data.test.mjs
+```
+
+本机没有 npm.cmd，先前在忽略的 work/toolchain 临时准备 npm 11.6.2，按原 package-lock.json 安装依赖；本次复用依赖，未改变锁文件、全局工具或凭据。
+
+以下只读入口需要已有账户授权和当前 Windows 用户上下文，CI 不自动调用：
+
+```powershell
+node plugins/autodl-direct/scripts/diagnose-instance.mjs pro-7913d6173e6e
+node plugins/autodl-direct/tooling/verify-live.mjs pro-7913d6173e6e
+```
+
+两份真实只读证据保留了此前本轮实测的原始时间；删除冗余功能后未重复账户查询。本次精简移除无关功能与重复包装，保留原 API 请求、回退、连接字段及诊断实现。仅保留 Codex 清单与 .mcp.json；收敛后的安装及缓存启动已验证，当前聊天的工具重新加载仍未验证。
+
+复现入口不接受 Token 参数或变更命令，不输出连接地址、金额或秘密。不要运行内部 Read-Token.ps1 显示凭据。

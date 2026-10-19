@@ -39,7 +39,6 @@ npm-debug.log*
 *.tgz
 
 # Generated reports; tooling/package-lock.json is the canonical lockfile
-/plugins/autodl-direct/dependency-lock.json
 /plugins/autodl-direct/dist/build-inputs.json
 
 # dist/server.mjs is intentionally tracked: Git-based installation runs it directly.

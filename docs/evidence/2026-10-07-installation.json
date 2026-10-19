@@ -1,0 +1,41 @@
+{
+  "observed_at": "2026-10-07T08:29:09.831Z",
+  "version": "0.1.4",
+  "plugin_id": "autodl-direct@autodl-tools",
+  "installed_root": "C:/Users/11386/.codex/plugins/cache/autodl-tools/autodl-direct/0.1.4",
+  "source_root": "C:\\Users\\11386\\Documents\\Codex\\2026-10-07\\autodl-direct-codex-gpu-https-github\\outputs\\autodl-direct\\plugins\\autodl-direct",
+  "hashes_match": true,
+  "sha256": {
+    ".codex-plugin/plugin.json": "fef6850a5bb88c4f0876ecdb7da4a67aa77efa5e9df8e7602d1ed11c3ace9788",
+    ".mcp.json": "d73a3c7a91661c960e139ad9bef520e84c71d154f1492b7c2c0134f5eb0bc0c1",
+    "dist/server.mjs": "ceb002d33ed50e48f64916c9bcf3aa471de6ee4baa5b598a425628c522d3d474",
+    "skills/autodl/SKILL.md": "802a6eb4149965fd61fb72bb5433a149c66a791e20bb7d84e21e9b77f765dae9",
+    "skills/autodl/references/official-api.md": "d3eb5b4db12cd482a0731b084423793982f488140d1090c7188ac63aaf99ff1b",
+    "assets/icon.svg": "44e64cb6db72f141453a0c34c663b7cb08164f5b94a5c5ef25c7a5a0f9858bc2",
+    "assets/icon-dark.svg": "871e7954c7e01b72c78288afca0a35f178421c0d3bad633d9f3f2cf2648f27d9",
+    "scripts/query-account.mjs": "9dc13b30bafd5f032d5cb3f6ea1e5312d836675cdf45ae0f8254dbae06f5b653",
+    "scripts/Configure-Token.ps1": "ad8e2b3a97362265f9d9ab8655d39dddf6e1efccfa0d3ba520cbdd5ac38cc94e",
+    "scripts/Read-Token.ps1": "75a4ff05cfc11cfb51578d13a3cc826c35006cc2903be91a40ce8d3e203c164b"
+  },
+  "mcp_tool_count": 10,
+  "mcp_tools": [
+    "autodl_setup_status",
+    "autodl_balance",
+    "autodl_list_instances",
+    "autodl_instance_status",
+    "autodl_instance_info",
+    "autodl_list_images",
+    "autodl_create_instance",
+    "autodl_power_on",
+    "autodl_power_off",
+    "autodl_save_image"
+  ],
+  "safe_checks": {
+    "setup_status": true,
+    "shutdown_preview_only": true,
+    "real_credentials_read": false,
+    "gpu_mutations": 0,
+    "autodl_network_requests": 0
+  },
+  "current_chat_tool_reload_verified": false
+}

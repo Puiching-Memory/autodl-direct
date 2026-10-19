@@ -1,0 +1,51 @@
+{
+  "observed_at": "2026-10-07T07:46:19.115Z",
+  "instance_uuid": "pro-7913d6173e6e",
+  "readOnly": true,
+  "balance": {
+    "valid_numbers": true,
+    "request_id": "017baa8fd2e91f2daf12bc38025fc620"
+  },
+  "list": {
+    "found": true,
+    "status": "shutdown",
+    "requests": [
+      {
+        "page_index": 1,
+        "request_id": "d5f67a92830eeaa3e236ae63047f1a54"
+      }
+    ]
+  },
+  "status": {
+    "data": "shutdown",
+    "source": "status_api",
+    "request_id": "65f17d51bd75e225774a87332e48f8f9",
+    "diagnostics": {
+      "endpoint": "status",
+      "method": "GET",
+      "path": "/api/v1/dev/instance/pro/status",
+      "parameter_mode": "query",
+      "elapsed_ms": 572
+    }
+  },
+  "info": {
+    "source": "snapshot_api",
+    "request_id": "b1e0df624f1968c3afbbae072639da03",
+    "diagnostics": {
+      "endpoint": "snapshot",
+      "method": "GET",
+      "path": "/api/v1/dev/instance/pro/snapshot",
+      "parameter_mode": "query",
+      "elapsed_ms": 550
+    },
+    "connection_fields_valid": true,
+    "credentials_redacted": true,
+    "authentication": {
+      "password": "provided_redacted",
+      "local_key": "not_checked",
+      "login": "not_verified"
+    }
+  },
+  "mutations_executed": 0,
+  "ssh_executed": false
+}

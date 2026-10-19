@@ -1,0 +1,898 @@
+{
+  "scope": "Installed plugin over real MCP; public catalog queries only; credential environment deliberately absent",
+  "tests": [
+    {
+      "case": "vimeo",
+      "arguments": {
+        "keyword": "Vimeo",
+        "page_size": 20
+      },
+      "data": {
+        "source": "autodl_public_catalog",
+        "source_url": "https://www.autodl.com/console/public-data",
+        "api_origin": "https://www.autodl.com",
+        "api_path": "/api/v1/common_data/list",
+        "authentication": "none; no Token or Cookie sent",
+        "keyword": "Vimeo",
+        "items": [
+          {
+            "id": 38,
+            "name": "Vimeo-90k",
+            "instance_path": "/root/autodl-pub/Vimeo-90k",
+            "catalog_size_mb": 83857,
+            "size_display": "81.89 GB",
+            "kind": "common_data",
+            "publisher": "toflow.csail.mit.edu",
+            "description": "Vimeo-90k视频超分数据集",
+            "instance_access": "not_verified"
+          }
+        ],
+        "pagination": {
+          "page_index": 1,
+          "page_size": 20,
+          "max_page": 1,
+          "result_total": 1,
+          "next_page_index": null
+        },
+        "complete_query_result": true,
+        "request_id": "bf6b2ac9b6add67cabd44a2d5f96f1e7",
+        "observed_at": "2026-10-19T13:25:11.293Z",
+        "notes": [
+          "来自控制台公共目录接口，并非已承诺稳定的开发者API；结构变化将显式报错。",
+          "大小按控制台MB字段及其1024进制GB显示规则呈现，不是实测文件字节数。",
+          "目录路径不证明目标实例、地区或Pro产品能够挂载和读取，使用前须在实例内检查。"
+        ]
+      }
+    },
+    {
+      "case": "mot17",
+      "arguments": {
+        "keyword": "MOT17",
+        "page_size": 20
+      },
+      "data": {
+        "source": "autodl_public_catalog",
+        "source_url": "https://www.autodl.com/console/public-data",
+        "api_origin": "https://www.autodl.com",
+        "api_path": "/api/v1/common_data/list",
+        "authentication": "none; no Token or Cookie sent",
+        "keyword": "MOT17",
+        "items": [
+          {
+            "id": 18,
+            "name": "MOT17",
+            "instance_path": "/root/autodl-pub/mot17",
+            "catalog_size_mb": 5589,
+            "size_display": "5.46 GB",
+            "kind": "common_data",
+            "publisher": "https://motchallenge.net/data/MOT17/",
+            "description": "MOT17 Challenge",
+            "instance_access": "not_verified"
+          }
+        ],
+        "pagination": {
+          "page_index": 1,
+          "page_size": 20,
+          "max_page": 1,
+          "result_total": 1,
+          "next_page_index": null
+        },
+        "complete_query_result": true,
+        "request_id": "f042fb01282cbec5e6ece10852f12e14",
+        "observed_at": "2026-10-19T13:25:11.291Z",
+        "notes": [
+          "来自控制台公共目录接口，并非已承诺稳定的开发者API；结构变化将显式报错。",
+          "大小按控制台MB字段及其1024进制GB显示规则呈现，不是实测文件字节数。",
+          "目录路径不证明目标实例、地区或Pro产品能够挂载和读取，使用前须在实例内检查。"
+        ]
+      }
+    },
+    {
+      "case": "all",
+      "arguments": {
+        "page_size": 100
+      },
+      "data": {
+        "source": "autodl_public_catalog",
+        "source_url": "https://www.autodl.com/console/public-data",
+        "api_origin": "https://www.autodl.com",
+        "api_path": "/api/v1/common_data/list",
+        "authentication": "none; no Token or Cookie sent",
+        "keyword": "",
+        "items": [
+          {
+            "id": 39,
+            "name": "argoverse2.0感知数据集",
+            "instance_path": "/root/autodl-pub/argoverse2.0-sensor",
+            "catalog_size_mb": 756757,
+            "size_display": "739.02 GB",
+            "kind": "common_data",
+            "publisher": "https://argoverse.github.io",
+            "description": "https://argoverse.github.io/user-guide/",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 38,
+            "name": "Vimeo-90k",
+            "instance_path": "/root/autodl-pub/Vimeo-90k",
+            "catalog_size_mb": 83857,
+            "size_display": "81.89 GB",
+            "kind": "common_data",
+            "publisher": "toflow.csail.mit.edu",
+            "description": "Vimeo-90k视频超分数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 37,
+            "name": "CULane",
+            "instance_path": "/root/autodl-pub/CULane",
+            "catalog_size_mb": 43466,
+            "size_display": "42.45 GB",
+            "kind": "common_data",
+            "publisher": "https://xingangpan.github.io/projects/CULane.html",
+            "description": "CULane is a large scale challenging dataset for academic research on traffic lane detection",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 36,
+            "name": "TT100K",
+            "instance_path": "/root/autodl-pub/TT100K",
+            "catalog_size_mb": 109333,
+            "size_display": "106.77 GB",
+            "kind": "common_data",
+            "publisher": "https://cg.cs.tsinghua.edu.cn/traffic-sign/",
+            "description": "交通信号灯检测与识别数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 35,
+            "name": "cifar-100",
+            "instance_path": "/root/autodl-pub/cifar-100",
+            "catalog_size_mb": 162,
+            "size_display": "162 MB",
+            "kind": "common_data",
+            "publisher": "https://www.cs.toronto.edu/~kriz/cifar.html",
+            "description": "CIFAR-100图像分类数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 34,
+            "name": "CUB200-2011",
+            "instance_path": "/root/autodl-pub/CUB200-2011",
+            "catalog_size_mb": 1135,
+            "size_display": "1.11 GB",
+            "kind": "common_data",
+            "publisher": "http://www.vision.caltech.edu/datasets/cub_200_2011/",
+            "description": "鸟类细粒度分类数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 33,
+            "name": "ModelNet",
+            "instance_path": "/root/autodl-pub/ModelNet",
+            "catalog_size_mb": 2397,
+            "size_display": "2.34 GB",
+            "kind": "common_data",
+            "publisher": "https://modelnet.cs.princeton.edu/",
+            "description": "The goal of the Princeton ModelNet project is to provide researchers in computer vision, computer graphics, robotics and cognitive science, with a comprehensive clean collection of 3D CAD models for objects. ",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 32,
+            "name": "S3DIS",
+            "instance_path": "/root/autodl-pub/S3DIS",
+            "catalog_size_mb": 14601,
+            "size_display": "14.26 GB",
+            "kind": "common_data",
+            "publisher": "http://buildingparser.stanford.edu/dataset.html",
+            "description": "Stanford Large-Scale 3D Indoor Spaces Dataset (S3DIS) ",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 31,
+            "name": "Aishell",
+            "instance_path": "/root/autodl-pub/Aishell",
+            "catalog_size_mb": 14863,
+            "size_display": "14.51 GB",
+            "kind": "common_data",
+            "publisher": "http://openslr.org/33/",
+            "description": "400 people from different accent areas in China are invited to participate in the recording, which is conducted in a quiet indoor environment using high fidelity microphone and downsampled to 16kHz.",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 30,
+            "name": "CrowdHuman",
+            "instance_path": "/root/autodl-pub/CrowdHuman",
+            "catalog_size_mb": 13563,
+            "size_display": "13.25 GB",
+            "kind": "common_data",
+            "publisher": "https://www.crowdhuman.org/",
+            "description": "The CrowdHuman dataset is large, rich-annotated and contains high diversity. CrowdHuman contains 15000, 4370 and 5000 images for training, validation, and testing, respectively.",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 29,
+            "name": "MsCelebV1",
+            "instance_path": "/root/autodl-pub/MsCelebV1-ImageThumbnails.zip",
+            "catalog_size_mb": 158110,
+            "size_display": "154.40 GB",
+            "kind": "common_data",
+            "publisher": "http://research.microsoft.com/en-US/projects/irc/acmmm2016.aspx",
+            "description": "微软名人数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 28,
+            "name": "DIV2K",
+            "instance_path": "/root/autodl-pub/DIV2K",
+            "catalog_size_mb": 8649,
+            "size_display": "8.45 GB",
+            "kind": "common_data",
+            "publisher": "https://data.vision.ee.ethz.ch/cvl/DIV2K/",
+            "description": "DIVerse 2K resolution high quality images as used for the challenges @ NTIRE (CVPR 2017 and CVPR 2018) and @ PIRM (ECCV 2018) ",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 27,
+            "name": "nuScenes",
+            "instance_path": "/root/autodl-pub/nuScenes",
+            "catalog_size_mb": 561507,
+            "size_display": "548.35 GB",
+            "kind": "common_data",
+            "publisher": "https://www.nuscenes.org/",
+            "description": "nuScenes is a public large-scale dataset for autonomous driving. It enables researchers to study challenging urban driving situations using the full sensor suite of a real self-driving car.",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 26,
+            "name": "CelebA",
+            "instance_path": "/root/autodl-pub/CelebA",
+            "catalog_size_mb": 22207,
+            "size_display": "21.69 GB",
+            "kind": "common_data",
+            "publisher": "http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html",
+            "description": "CelebFaces Attributes Dataset (CelebA) is a large-scale face attributes dataset with more than 200K celebrity images, each with 40 attribute annotations.",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 25,
+            "name": "KITTI",
+            "instance_path": "/root/autodl-pub/KITTI",
+            "catalog_size_mb": 136178,
+            "size_display": "132.99 GB",
+            "kind": "common_data",
+            "publisher": "https://www.cvlibs.net/datasets/kitti",
+            "description": "KITTI数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 24,
+            "name": "KITTI_Depth_Completion",
+            "instance_path": "/root/autodl-pub/KITTI_Depth_Completion.tar",
+            "catalog_size_mb": 94922,
+            "size_display": "92.70 GB",
+            "kind": "common_data",
+            "publisher": "http://www.cvlibs.net/datasets/kitti/eval_depth.php?benchmark=depth_completion",
+            "description": "KITTI深度补全数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 23,
+            "name": "SemanticKITTI",
+            "instance_path": "/root/autodl-pub/SemanticKITTI",
+            "catalog_size_mb": 84818,
+            "size_display": "82.83 GB",
+            "kind": "common_data",
+            "publisher": "http://www.semantic-kitti.org/dataset.html#download",
+            "description": "SemanticKITTI数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 22,
+            "name": "MPII Human Pose",
+            "instance_path": "/root/autodl-pub/mpii_human_pose",
+            "catalog_size_mb": 11540,
+            "size_display": "11.27 GB",
+            "kind": "common_data",
+            "publisher": "http://human-pose.mpi-inf.mpg.de/#download",
+            "description": "MPII Human Pose数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 21,
+            "name": "MVTec AD",
+            "instance_path": "/root/autodl-pub/mvtec_anomaly_detection.tar.xz",
+            "catalog_size_mb": 5021,
+            "size_display": "4.90 GB",
+            "kind": "common_data",
+            "publisher": "https://www.mvtec.com/company/research/datasets/mvtec-ad",
+            "description": "工业异常检测的数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 20,
+            "name": "ImageNet100",
+            "instance_path": "/root/autodl-pub/ImageNet100",
+            "catalog_size_mb": 13733,
+            "size_display": "13.41 GB",
+            "kind": "common_data",
+            "publisher": "image-net.org",
+            "description": "ImageNet 100类数据集。参考：https://github.com/HobbitLong/CMC/blob/master/imagenet100.txt",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 19,
+            "name": "SAIL-VOS",
+            "instance_path": "/root/autodl-pub/SAIL-VOS",
+            "catalog_size_mb": 177335,
+            "size_display": "173.18 GB",
+            "kind": "common_data",
+            "publisher": "https://sailvos.web.illinois.edu/_site/dataset_readme.html",
+            "description": "语义非模态实例级视频对象分割数据集（内蒙A区有该数据集）",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 18,
+            "name": "MOT17",
+            "instance_path": "/root/autodl-pub/mot17",
+            "catalog_size_mb": 5589,
+            "size_display": "5.46 GB",
+            "kind": "common_data",
+            "publisher": "https://motchallenge.net/data/MOT17/",
+            "description": "MOT17 Challenge",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 17,
+            "name": "Cityscapes",
+            "instance_path": "/root/autodl-pub/cityscapes",
+            "catalog_size_mb": 11297,
+            "size_display": "11.03 GB",
+            "kind": "common_data",
+            "publisher": "www.cityscapes-dataset.net",
+            "description": "城市街景实例/语义分割",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 16,
+            "name": "ImageNet",
+            "instance_path": "/root/autodl-pub/ImageNet",
+            "catalog_size_mb": 161338,
+            "size_display": "157.56 GB",
+            "kind": "common_data",
+            "publisher": "image-net.org",
+            "description": "ImageNet 1000类分类识别数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 15,
+            "name": "GOT10k",
+            "instance_path": "/root/autodl-pub/GOT10k",
+            "catalog_size_mb": 72815,
+            "size_display": "71.11 GB",
+            "kind": "common_data",
+            "publisher": "got-10k.aitestunion.com",
+            "description": "大型目标跟踪数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 14,
+            "name": "RoBERTa预训练模型(Torch)",
+            "instance_path": "/root/autodl-pub/RoBERTa-Pretrain-Model",
+            "catalog_size_mb": 1082,
+            "size_display": "1.06 GB",
+            "kind": "model",
+            "publisher": "参考：https://docs.qq.com/sheet/DVnpkTnF6VW9UeXdh?tab=BB08J2",
+            "description": "RoBERTa预训练模型",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 13,
+            "name": "BERT预训练模型(Torch)",
+            "instance_path": "/root/autodl-pub/BERT-Pretrain-Model",
+            "catalog_size_mb": 3906,
+            "size_display": "3.81 GB",
+            "kind": "model",
+            "publisher": "参考：https://docs.qq.com/sheet/DVnpkTnF6VW9UeXdh?tab=BB08J2",
+            "description": "BERT预训练模型",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 12,
+            "name": "DRIVE",
+            "instance_path": "/root/autodl-pub/DRIVE",
+            "catalog_size_mb": 27,
+            "size_display": "27 MB",
+            "kind": "common_data",
+            "publisher": "drive.grand-challenge.org",
+            "description": "视网膜病变研究的数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 11,
+            "name": "MOT20",
+            "instance_path": "/root/autodl-pub/MOT20",
+            "catalog_size_mb": 4815,
+            "size_display": "4.70 GB",
+            "kind": "common_data",
+            "publisher": "motchallenge.net/data/MOT20/",
+            "description": "密集人群中行人跟踪数据集（多目标跟踪）",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 10,
+            "name": "CASIAWebFace",
+            "instance_path": "/root/autodl-pub/CASIAWebFace",
+            "catalog_size_mb": 4201,
+            "size_display": "4.10 GB",
+            "kind": "common_data",
+            "publisher": "www.cbsr.ia.ac.cn/english/CASIA-WebFace-Database.html",
+            "description": "大规模人脸数据集，主要用于身份鉴定和人脸识别，包含 10,575 个主题和 494,414 张图像",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 9,
+            "name": "KITTI",
+            "instance_path": "/root/autodl-pub/KITTI",
+            "catalog_size_mb": 136178,
+            "size_display": "132.99 GB",
+            "kind": "common_data",
+            "publisher": "www.cvlibs.net/datasets/kitti/",
+            "description": "自动驾驶场景数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 8,
+            "name": "DOTA v1",
+            "instance_path": "/root/autodl-pub/DOTA",
+            "catalog_size_mb": 19287,
+            "size_display": "18.83 GB",
+            "kind": "common_data",
+            "publisher": "captain-whu.github.io/DOTA",
+            "description": "航拍图像物体检测数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 7,
+            "name": "ADEChallengeData2016",
+            "instance_path": "/root/autodl-pub/ADEChallengeData2016",
+            "catalog_size_mb": 1125,
+            "size_display": "1.10 GB",
+            "kind": "common_data",
+            "publisher": "sceneparsing.csail.mit.edu",
+            "description": "ADE20K场景语义分割数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 6,
+            "name": "风格迁移：梵高油画<->照片",
+            "instance_path": "/root/autodl-pub/vangogh2photo.zip",
+            "catalog_size_mb": 292,
+            "size_display": "292 MB",
+            "kind": "common_data",
+            "publisher": "",
+            "description": "一般用于CycleGAN风格迁移数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 5,
+            "name": "风格迁移：斑马<->马",
+            "instance_path": "/root/autodl-pub/horse2zebra.zip",
+            "catalog_size_mb": 111,
+            "size_display": "111 MB",
+            "kind": "common_data",
+            "publisher": "",
+            "description": "一般用于CycleGAN风格迁移数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 4,
+            "name": "COCO 2017",
+            "instance_path": "/root/autodl-pub/COCO2017",
+            "catalog_size_mb": 25799,
+            "size_display": "25.19 GB",
+            "kind": "common_data",
+            "publisher": "Microsoft",
+            "description": "COCO 2017检测数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 3,
+            "name": "CIFAR10",
+            "instance_path": "/root/autodl-pub/cifar-10",
+            "catalog_size_mb": 163,
+            "size_display": "163 MB",
+            "kind": "common_data",
+            "publisher": "www.cs.toronto.edu",
+            "description": "CIFAR10 分类数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 2,
+            "name": "PASCAL VOC2012",
+            "instance_path": "/root/autodl-pub/VOCdevkit/VOC2012.tar.gz",
+            "catalog_size_mb": 1846,
+            "size_display": "1.80 GB",
+            "kind": "common_data",
+            "publisher": "host.robots.ox.ac.uk",
+            "description": "VOC 2012检测和语义分割数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 1,
+            "name": "PASCAL VOC2007",
+            "instance_path": "/root/autodl-pub/VOCdevkit/VOC2007.tar.gz",
+            "catalog_size_mb": 837,
+            "size_display": "837 MB",
+            "kind": "common_data",
+            "publisher": "host.robots.ox.ac.uk",
+            "description": "VOC 2007检测和语义分割数据集",
+            "instance_access": "not_verified"
+          }
+        ],
+        "pagination": {
+          "page_index": 1,
+          "page_size": 100,
+          "max_page": 1,
+          "result_total": 39,
+          "next_page_index": null
+        },
+        "complete_query_result": true,
+        "request_id": "f726805e00dc32a0c08ed3c83703a1ca",
+        "observed_at": "2026-10-19T13:25:11.333Z",
+        "notes": [
+          "来自控制台公共目录接口，并非已承诺稳定的开发者API；结构变化将显式报错。",
+          "大小按控制台MB字段及其1024进制GB显示规则呈现，不是实测文件字节数。",
+          "目录路径不证明目标实例、地区或Pro产品能够挂载和读取，使用前须在实例内检查。"
+        ]
+      }
+    },
+    {
+      "case": "first_page",
+      "arguments": {
+        "page_index": 1,
+        "page_size": 10
+      },
+      "data": {
+        "source": "autodl_public_catalog",
+        "source_url": "https://www.autodl.com/console/public-data",
+        "api_origin": "https://www.autodl.com",
+        "api_path": "/api/v1/common_data/list",
+        "authentication": "none; no Token or Cookie sent",
+        "keyword": "",
+        "items": [
+          {
+            "id": 39,
+            "name": "argoverse2.0感知数据集",
+            "instance_path": "/root/autodl-pub/argoverse2.0-sensor",
+            "catalog_size_mb": 756757,
+            "size_display": "739.02 GB",
+            "kind": "common_data",
+            "publisher": "https://argoverse.github.io",
+            "description": "https://argoverse.github.io/user-guide/",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 38,
+            "name": "Vimeo-90k",
+            "instance_path": "/root/autodl-pub/Vimeo-90k",
+            "catalog_size_mb": 83857,
+            "size_display": "81.89 GB",
+            "kind": "common_data",
+            "publisher": "toflow.csail.mit.edu",
+            "description": "Vimeo-90k视频超分数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 37,
+            "name": "CULane",
+            "instance_path": "/root/autodl-pub/CULane",
+            "catalog_size_mb": 43466,
+            "size_display": "42.45 GB",
+            "kind": "common_data",
+            "publisher": "https://xingangpan.github.io/projects/CULane.html",
+            "description": "CULane is a large scale challenging dataset for academic research on traffic lane detection",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 36,
+            "name": "TT100K",
+            "instance_path": "/root/autodl-pub/TT100K",
+            "catalog_size_mb": 109333,
+            "size_display": "106.77 GB",
+            "kind": "common_data",
+            "publisher": "https://cg.cs.tsinghua.edu.cn/traffic-sign/",
+            "description": "交通信号灯检测与识别数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 35,
+            "name": "cifar-100",
+            "instance_path": "/root/autodl-pub/cifar-100",
+            "catalog_size_mb": 162,
+            "size_display": "162 MB",
+            "kind": "common_data",
+            "publisher": "https://www.cs.toronto.edu/~kriz/cifar.html",
+            "description": "CIFAR-100图像分类数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 34,
+            "name": "CUB200-2011",
+            "instance_path": "/root/autodl-pub/CUB200-2011",
+            "catalog_size_mb": 1135,
+            "size_display": "1.11 GB",
+            "kind": "common_data",
+            "publisher": "http://www.vision.caltech.edu/datasets/cub_200_2011/",
+            "description": "鸟类细粒度分类数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 33,
+            "name": "ModelNet",
+            "instance_path": "/root/autodl-pub/ModelNet",
+            "catalog_size_mb": 2397,
+            "size_display": "2.34 GB",
+            "kind": "common_data",
+            "publisher": "https://modelnet.cs.princeton.edu/",
+            "description": "The goal of the Princeton ModelNet project is to provide researchers in computer vision, computer graphics, robotics and cognitive science, with a comprehensive clean collection of 3D CAD models for objects. ",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 32,
+            "name": "S3DIS",
+            "instance_path": "/root/autodl-pub/S3DIS",
+            "catalog_size_mb": 14601,
+            "size_display": "14.26 GB",
+            "kind": "common_data",
+            "publisher": "http://buildingparser.stanford.edu/dataset.html",
+            "description": "Stanford Large-Scale 3D Indoor Spaces Dataset (S3DIS) ",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 31,
+            "name": "Aishell",
+            "instance_path": "/root/autodl-pub/Aishell",
+            "catalog_size_mb": 14863,
+            "size_display": "14.51 GB",
+            "kind": "common_data",
+            "publisher": "http://openslr.org/33/",
+            "description": "400 people from different accent areas in China are invited to participate in the recording, which is conducted in a quiet indoor environment using high fidelity microphone and downsampled to 16kHz.",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 30,
+            "name": "CrowdHuman",
+            "instance_path": "/root/autodl-pub/CrowdHuman",
+            "catalog_size_mb": 13563,
+            "size_display": "13.25 GB",
+            "kind": "common_data",
+            "publisher": "https://www.crowdhuman.org/",
+            "description": "The CrowdHuman dataset is large, rich-annotated and contains high diversity. CrowdHuman contains 15000, 4370 and 5000 images for training, validation, and testing, respectively.",
+            "instance_access": "not_verified"
+          }
+        ],
+        "pagination": {
+          "page_index": 1,
+          "page_size": 10,
+          "max_page": 4,
+          "result_total": 39,
+          "next_page_index": 2
+        },
+        "complete_query_result": false,
+        "request_id": "bf421d014ec74c13dc2728627d64fd49",
+        "observed_at": "2026-10-19T13:25:11.387Z",
+        "notes": [
+          "来自控制台公共目录接口，并非已承诺稳定的开发者API；结构变化将显式报错。",
+          "大小按控制台MB字段及其1024进制GB显示规则呈现，不是实测文件字节数。",
+          "目录路径不证明目标实例、地区或Pro产品能够挂载和读取，使用前须在实例内检查。"
+        ]
+      }
+    },
+    {
+      "case": "last_page",
+      "arguments": {
+        "page_index": 4,
+        "page_size": 10
+      },
+      "data": {
+        "source": "autodl_public_catalog",
+        "source_url": "https://www.autodl.com/console/public-data",
+        "api_origin": "https://www.autodl.com",
+        "api_path": "/api/v1/common_data/list",
+        "authentication": "none; no Token or Cookie sent",
+        "keyword": "",
+        "items": [
+          {
+            "id": 9,
+            "name": "KITTI",
+            "instance_path": "/root/autodl-pub/KITTI",
+            "catalog_size_mb": 136178,
+            "size_display": "132.99 GB",
+            "kind": "common_data",
+            "publisher": "www.cvlibs.net/datasets/kitti/",
+            "description": "自动驾驶场景数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 8,
+            "name": "DOTA v1",
+            "instance_path": "/root/autodl-pub/DOTA",
+            "catalog_size_mb": 19287,
+            "size_display": "18.83 GB",
+            "kind": "common_data",
+            "publisher": "captain-whu.github.io/DOTA",
+            "description": "航拍图像物体检测数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 7,
+            "name": "ADEChallengeData2016",
+            "instance_path": "/root/autodl-pub/ADEChallengeData2016",
+            "catalog_size_mb": 1125,
+            "size_display": "1.10 GB",
+            "kind": "common_data",
+            "publisher": "sceneparsing.csail.mit.edu",
+            "description": "ADE20K场景语义分割数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 6,
+            "name": "风格迁移：梵高油画<->照片",
+            "instance_path": "/root/autodl-pub/vangogh2photo.zip",
+            "catalog_size_mb": 292,
+            "size_display": "292 MB",
+            "kind": "common_data",
+            "publisher": "",
+            "description": "一般用于CycleGAN风格迁移数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 5,
+            "name": "风格迁移：斑马<->马",
+            "instance_path": "/root/autodl-pub/horse2zebra.zip",
+            "catalog_size_mb": 111,
+            "size_display": "111 MB",
+            "kind": "common_data",
+            "publisher": "",
+            "description": "一般用于CycleGAN风格迁移数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 4,
+            "name": "COCO 2017",
+            "instance_path": "/root/autodl-pub/COCO2017",
+            "catalog_size_mb": 25799,
+            "size_display": "25.19 GB",
+            "kind": "common_data",
+            "publisher": "Microsoft",
+            "description": "COCO 2017检测数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 3,
+            "name": "CIFAR10",
+            "instance_path": "/root/autodl-pub/cifar-10",
+            "catalog_size_mb": 163,
+            "size_display": "163 MB",
+            "kind": "common_data",
+            "publisher": "www.cs.toronto.edu",
+            "description": "CIFAR10 分类数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 2,
+            "name": "PASCAL VOC2012",
+            "instance_path": "/root/autodl-pub/VOCdevkit/VOC2012.tar.gz",
+            "catalog_size_mb": 1846,
+            "size_display": "1.80 GB",
+            "kind": "common_data",
+            "publisher": "host.robots.ox.ac.uk",
+            "description": "VOC 2012检测和语义分割数据集",
+            "instance_access": "not_verified"
+          },
+          {
+            "id": 1,
+            "name": "PASCAL VOC2007",
+            "instance_path": "/root/autodl-pub/VOCdevkit/VOC2007.tar.gz",
+            "catalog_size_mb": 837,
+            "size_display": "837 MB",
+            "kind": "common_data",
+            "publisher": "host.robots.ox.ac.uk",
+            "description": "VOC 2007检测和语义分割数据集",
+            "instance_access": "not_verified"
+          }
+        ],
+        "pagination": {
+          "page_index": 4,
+          "page_size": 10,
+          "max_page": 4,
+          "result_total": 39,
+          "next_page_index": null
+        },
+        "complete_query_result": false,
+        "request_id": "c1415ba7a405eb66d79b9802b3e38413",
+        "observed_at": "2026-10-19T13:25:11.386Z",
+        "notes": [
+          "来自控制台公共目录接口，并非已承诺稳定的开发者API；结构变化将显式报错。",
+          "大小按控制台MB字段及其1024进制GB显示规则呈现，不是实测文件字节数。",
+          "目录路径不证明目标实例、地区或Pro产品能够挂载和读取，使用前须在实例内检查。"
+        ]
+      }
+    },
+    {
+      "case": "empty",
+      "arguments": {
+        "keyword": "__autodl_catalog_verification_no_match_20261019__",
+        "page_size": 20
+      },
+      "data": {
+        "source": "autodl_public_catalog",
+        "source_url": "https://www.autodl.com/console/public-data",
+        "api_origin": "https://www.autodl.com",
+        "api_path": "/api/v1/common_data/list",
+        "authentication": "none; no Token or Cookie sent",
+        "keyword": "__autodl_catalog_verification_no_match_20261019__",
+        "items": [],
+        "pagination": {
+          "page_index": 1,
+          "page_size": 20,
+          "max_page": 1,
+          "result_total": 0,
+          "next_page_index": null
+        },
+        "complete_query_result": true,
+        "request_id": "e70d70081a7e660077e5ba23f045b560",
+        "observed_at": "2026-10-19T13:25:11.389Z",
+        "notes": [
+          "来自控制台公共目录接口，并非已承诺稳定的开发者API；结构变化将显式报错。",
+          "大小按控制台MB字段及其1024进制GB显示规则呈现，不是实测文件字节数。",
+          "目录路径不证明目标实例、地区或Pro产品能够挂载和读取，使用前须在实例内检查。"
+        ]
+      }
+    }
+  ],
+  "server": {
+    "name": "autodl-direct",
+    "version": "0.1.6"
+  },
+  "tool_count": 11,
+  "public_tool": {
+    "name": "autodl_list_public_data",
+    "title": "查询公共数据目录",
+    "description": "按名称搜索并分页查询 AutoDL 公共数据集和模型目录，返回挂载路径、目录大小、发布方及简介。不需要Token，不发送Token或Cookie；路径不代表目标实例可访问。目录接口变化时显式报错。",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "keyword": {
+          "default": "",
+          "type": "string",
+          "maxLength": 200,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]*$"
+        },
+        "page_index": {
+          "default": 1,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "page_size": {
+          "default": 20,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  "credentials_configured": false,
+  "status": "passed"
+}

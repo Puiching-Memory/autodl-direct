@@ -1,98 +1,59 @@
-# AutoDL Direct
+# AutoDL Direct 工具说明
 
-本地自建的 Codex 插件，直接访问 AutoDL 官方开发者 API。业务代码由本项目编写，未使用第三方 AutoDL 项目的代码。它不是 AutoDL 官方发布的插件。此版本由 GitHub 私有仓库分发，采用 MIT 许可证。
+安装、开发和职责边界见 [仓库 README](../../README.md)，真实与模拟验证见 [VERIFICATION](VERIFICATION.md)，操作流程见 [Skill](skills/autodl/SKILL.md)。本包仅面向 Windows Codex 的 Git 仓库安装路径。
 
-采用当前 Agent Plugins 格式（根目录 `plugin.json`、`mcp.json`、`skills/`），同时附带 Codex 兼容清单。配有独立的浅色和深色图标，品牌色为青绿色。
-
-## 安装
-
-需要 Node.js 22 及以上、支持 `codex plugin` 的 Codex。Windows 的 PowerShell 与 OpenSSH 用于凭据配置和远程任务。本包已经构建，不需要运行 npm 安装依赖。
-
-将 ZIP 解压到一个准备长期保留的本地目录，进入其中的 `autodl-direct` 文件夹，在本机 PowerShell 中运行：
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Plugin.ps1
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Configure-Token.ps1
-```
-
-从其他目录运行时使用脚本的完整路径。安装脚本会注册一个本地插件目录并安装 `autodl-direct`。它不启动或创建任何 GPU 实例。凭据配置脚本只调用余额查询进行验证，然后使用 Windows DPAPI 加密保存到 `%LOCALAPPDATA%\CodexAutoDL\token.dpapi`。不需要向聊天提供 Token，也不会把 Token 写进插件包。
-
-安装后保留解压目录，避免插件目录引用失效。配置后，在新聊天中使用 AutoDL Direct，或重启插件连接。可先说：“使用 AutoDL Direct 检查配置，查询我的余额和 Pro 实例。”
-
-也可由启动 Codex 的本机环境提供 `AUTODL_TOKEN`，其优先级高于 DPAPI 凭据。可用 `AUTODL_CREDENTIAL_FILE` 指定 DPAPI 文件位置。
-
-## 查询故障排查
-
-优先使用聊天暴露的 MCP 工具。`autodl_setup_status` 只检查凭据存在，不保证当前执行进程能解密。`CREDENTIALS_UNREADABLE` 可能来自受限进程、Windows 用户或运行环境差异，不代表 Token 无效，无需立即重新配置。
-
-如果聊天没有暴露 MCP 工具、但可在本机执行，Skill 会调用包内只读入口，并按 Codex 的权限审批使用配置凭据的 Windows 用户上下文。在当前 Windows 用户的本机终端也可运行：
-
-```powershell
-node .\scripts\query-account.mjs account 1 100
-```
-
-该入口复用同一套 API 校验和脱敏代码，只支持 `status`（离线检查）、`balance`（余额）、`instances`（一页 Pro 实例）和 `account`（余额加一页 Pro 实例）。后两项接受页码和每页数量，默认 `1 100`；根据返回的 `max_page` / `result_total` 继续翻页。错误返回脱敏 JSON 和非零退出码，不支持 Token 参数或实例变更。
-
-不要在受限 shell 临时导入源码模拟工具，也不要直接调用 `Read-Token.ps1` 输出凭据。若当前聊天只有云端执行能力，应切换到有本机访问和 MCP 工具的 Codex 聊天；本机 DPAPI 凭据无法直接用于云端进程。更新插件后新开聊天，使新版 Skill 生效。
-
-## 实现的工具
+## MCP 工具
 
 | 工具 | 功能 |
 | --- | --- |
 | `autodl_setup_status` | 离线检查运行环境及凭据是否存在 |
 | `autodl_balance` | 查询余额、代金券、累计消费，转换为元 |
-| `autodl_list_instances` | 分页查询 Pro 实例 |
-| `autodl_instance_status` | 查询状态，验证开关机结果 |
-| `autodl_instance_info` | 读取详情和 SSH 地址，隐藏密码及 Jupyter Token |
-| `autodl_list_images` | 查询 Pro 私有镜像和保存状态 |
+| `autodl_list_instances` | 分页查询 Pro 实例，保留平台返回的定时关机字段 |
+| `autodl_instance_status` | 查询状态；故障时有界分页回退并报告来源 |
+| `autodl_instance_info` | 安全主机、端口、用户名和认证状态；密码及 Token 脱敏 |
+| `autodl_list_images` | 分页查询 Pro 私有镜像和保存状态 |
+| `autodl_list_public_data` | 无需凭据，按名称搜索和分页查询公共数据集/模型、实例路径、目录大小和发布方 |
 | `autodl_create_instance` | 预览或创建按量计费 Pro 实例 |
 | `autodl_power_on` | 预览或执行 GPU 模式开机 |
 | `autodl_power_off` | 预览或执行关机 |
-| `autodl_save_image` | 预览或保存系统盘镜像 |
+| `autodl_save_image` | 预览或保存系统盘镜像，不包含数据盘 |
 
-变更默认 `execute=false`，仅返回具体请求预览，不发网络请求。`execute=true` 执行真实 API 操作。用户已经给出的授权可以用于后续执行，不要求每次重新确认。实例释放和企业弹性部署未包含在此版本中。
+变更默认 `execute=false`，不读取凭据、不发请求；`execute=true` 根据用户已有授权执行。API 接受请求后仍需检查状态或镜像列表。传输结果不确定时，返回 `accepted=null`、`outcome=unknown`、`retry_allowed=false` 并只读核实；创建候选或目标状态不证明本次请求成功。
 
-## SSH 与训练任务
+状态/详情生产请求使用 GET Query，依据真实只读对照；官方文档描述 GET JSON Body，服务端或代理根因仍未定位。回退结果注明来源、时间及原始诊断；详情的部分列表回退不猜 SSH 地址。认证输出只说明字段是否提供及脱敏，不证明本地密钥或 SSH 登录可用。
 
-Skill 引导 Codex 使用系统自带的 SSH 和 SCP/SFTP 执行命令、传输文件、运行后台任务并取回结果。需要先配置实例的 SSH 密钥或一个可用的 SSH 别名；本包没有内置 SSH 密码自动登录功能。普通实例可以走已有 SSH 工作流，Pro API 不会查询或管理普通实例。
+## 查询故障排查
 
-API 接受开关机请求不等于操作已经完成，Skill 要求继续检查状态。开机后 SSH 也可能尚未就绪。插件不提供自动关机调度、创建前报价或预算上限；任务时长和收尾动作应按实际任务安排。开机命令失败不会触发自动关机。
+公共数据目录不需要配置 Token，可直接调用 `autodl_list_public_data`，例如 `{"keyword":"Vimeo","page_index":1,"page_size":20}`。不传 keyword 可浏览目录。根据 `pagination.next_page_index` 翻页；只有 `complete_query_result=true` 才表示本次筛选的全部结果已返回。目录路径不证明某个地区或 Pro 实例能够访问，需通过实例内只读检查确认。
 
-## 可审查的代码与依赖
+此查询使用控制台的公共目录接口 `GET https://www.autodl.com/api/v1/common_data/list`，未使用或转发 Token/Cookie；不是已承诺稳定的开发者 API。字段变化、分页矛盾、超时、登录页或重定向会显式报错，不作为空结果返回。大小沿用控制台显示规则，不是实测文件字节数。
 
-- `src/api.mjs`：固定官方 API 地址、鉴权、HTTP 请求、错误处理与凭据脱敏。
-- `src/tools.mjs`：10 个工具的输入校验、预览和执行。
-- `src/server.mjs`：注册 MCP 工具并启动本地 stdio 进程。
-- `scripts/Configure-Token.ps1`：交互式配置本机加密凭据。
-- `scripts/Read-Token.ps1`：MCP 内部使用的解密助手，请勿将其输出到聊天或日志。
-- `scripts/query-account.mjs`：复用打包运行产物的只读查询入口，不暴露凭据或实例变更。
-- `dist/server.mjs`：上述代码和协议库的可运行打包产物，无需运行时下载依赖。
-
-协议层使用 MCP 官方 TypeScript SDK `@modelcontextprotocol/server@2.2.0`、其 `core@2.2.0` 和输入校验库 `zod@4.6.5`。具体版本锁定在 `tooling/package-lock.json`，许可证见 `THIRD_PARTY_NOTICES.txt`。本地构建会另生成 `dependency-lock.json` 副本和 `dist/build-inputs.json` 报告，两者不进入 Git。这不意味着完全没有第三方库：AutoDL 业务逻辑由我们自建，MCP 协议和参数校验使用列出的通用库。
-
-Token 只用于列出的 AutoDL 官方地址，请求不跟随重定向；创建等变更不自动重试。状态与详情按官方文档使用 GET 加 JSON Body。API 输出和错误均脱敏，失败时保留请求 ID。插件代码仍运行在当前用户权限下；DPAPI 不是对同一用户进程的隔离边界。
-
-### 重新构建和复查
-
-`tooling/` 附有构建脚本、版本锁和离线测试。只有重新构建或测试时才需要安装这些开发依赖；直接使用插件无需此步骤。
+工具暂未暴露时，在插件根目录运行同样无需凭据的只读入口：
 
 ```powershell
-npm.cmd ci --prefix tooling --ignore-scripts --no-audit --no-fund
-node tooling/build.mjs
-node --test tooling/verify.test.mjs
+node scripts/query-public-data.mjs --keyword Vimeo --page 1 --page-size 20
 ```
 
-测试使用模拟 API 和无效的固定测试凭据，启动的 MCP 子进程不会读取你的实际 Token。它验证参数、请求格式、预览、脱敏和工具连接，不执行真实租卡操作。
+`autodl_setup_status` 只检查凭据存在，不能保证当前进程能解密。`CREDENTIALS_UNREADABLE` 可能来自进程权限、Windows 用户或环境差异，不代表 Token 无效；先检查执行上下文与插件连接。
 
-## 验证与边界
+聊天未暴露 MCP 工具时，在配置凭据的 Windows 用户上下文运行包内只读入口，并遵守宿主审批。在插件根目录：
 
-验证结果见 `VERIFICATION.md`。本机安装发现、MCP 调用、离线契约测试与真实账户 API 测试分别报告。未配置账户时，不宣称真实开关机、租卡或 SSH 任务已经跑通。
+```powershell
+node scripts/query-account.mjs account 1 100
+```
 
-## 官方参考
+支持 `status`（离线检查）、`balance`、`instances <页码> <每页数量>`、`account <页码> <每页数量>`、`instance-status <pro-ID>` 和 `instance-info <pro-ID>`。分页默认 `1 100`，按 `max_page` / `result_total` 继续翻页。错误输出脱敏 JSON 和非零退出码；不接受 Token 参数或变更命令。
 
-- [AutoDL 通用 API](https://www.autodl.com/docs/common_api/)
-- [AutoDL Pro API](https://www.autodl.com/docs/instance_pro_api/)
-- [Codex 插件格式与本地安装](https://developers.openai.com/plugins/build/plugins)
-- [MCP 官方 SDK](https://github.com/modelcontextprotocol/typescript-sdk)
+不要临时导入源码模拟工具，或直接运行内部 `Read-Token.ps1` 展示凭据。云端进程不能解密本机 DPAPI 文件，应使用有本机访问能力的 Codex 聊天。凭据配置及优先级见 [SECURITY](../../SECURITY.md)。
 
-该包供本地使用。上传到账号不会使这个本地进程自动在网页或移动端运行；公共目录发布还需要相应的托管、认证与审核流程。
+## 实现入口
+
+- `src/api.mjs`：固定官方地址、鉴权、HTTP、错误与脱敏。
+- `src/instances.mjs`：分页回退、连接字段、变更不确定时核实。
+- `src/public-data.mjs`：独立的无凭据公共目录请求、分页和记录校验。
+- `src/tools.mjs`：参数校验、默认预览与执行。
+- `src/server.mjs`：注册 MCP，版本从 Codex 清单读取。
+- `scripts/query-account.mjs`：复用运行包的只读查询入口。
+- `scripts/query-public-data.mjs`：公共目录的无凭据只读入口。
+- `scripts/diagnose-instance.mjs`：只读比较 GET Body、Query 及组合参数。
+- `dist/server.mjs`：可直接运行的打包产物；依赖锁和离线测试位于 `tooling/`。

@@ -1,10 +1,11 @@
-import { build } from 'esbuild';
+import { build, version } from 'esbuild';
 import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(directory, '..');
+const lock = JSON.parse(await readFile(path.join(directory, 'package-lock.json'), 'utf8'));
 await mkdir(path.join(root, 'dist'), { recursive: true });
 const result = await build({ entryPoints: [path.join(root, 'src/server.mjs')],
   absWorkingDir: root,
@@ -12,8 +13,9 @@ const result = await build({ entryPoints: [path.join(root, 'src/server.mjs')],
   target: 'node22', nodePaths: [path.join(directory, 'node_modules')],
   metafile: true, legalComments: 'eof', minify: false });
 await writeFile(path.join(root, 'dist/build-inputs.json'), JSON.stringify({
-  builder: 'esbuild 0.25.12', entrypoint: 'src/server.mjs',
-  packages: ['@modelcontextprotocol/server@2.2.0', '@modelcontextprotocol/core@2.2.0', 'zod@4.6.5'],
+  builder: `esbuild ${version}`, entrypoint: 'src/server.mjs',
+  packages: ['@modelcontextprotocol/server', '@modelcontextprotocol/core', 'zod']
+    .map(name => `${name}@${lock.packages[`node_modules/${name}`].version}`),
   inputs: Object.keys(result.metafile.inputs).map(x => x.replaceAll('\\', '/').replace(/^.*node_modules\//, 'node_modules/'))
 }, null, 2) + '\n');
 const licenseFiles = [
@@ -29,7 +31,6 @@ for (const [name, filename] of licenseFiles) {
   notices += `${name}\n${license}\n\n`;
 }
 await writeFile(path.join(root, 'THIRD_PARTY_NOTICES.txt'), notices);
-await writeFile(path.join(root, 'dependency-lock.json'), await readFile(path.join(directory, 'package-lock.json')));
 for (const filename of await readdir(path.join(root, 'scripts'))) {
   if (!filename.endsWith('.ps1')) continue;
   const file = path.join(root, 'scripts', filename);

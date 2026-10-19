@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-10-07T07:19:27.891Z",
+  "instance_uuid": "pro-7913d6173e6e",
+  "readOnly": true,
+  "source": "safe console output from scripts/diagnose-instance.mjs, reduced to protocol results",
+  "attempts": [
+    { "endpoint": "status", "method": "GET", "parameter_mode": "body", "code": "RequestParameterIsWrong", "request_id": "c97f96f6c5e5195245518c860608ff82" },
+    { "endpoint": "status", "method": "GET", "parameter_mode": "query", "code": "Success", "data": "shutdown", "request_id": "adc0fa144be653851ff234b88e67b70e" },
+    { "endpoint": "status", "method": "GET", "parameter_mode": "body+query", "code": "Success", "data": "shutdown", "request_id": "2b7fde4469e434d507abce9e148113ad" },
+    { "endpoint": "snapshot", "method": "GET", "parameter_mode": "body", "code": "RequestParameterIsWrong", "request_id": "b604958d87a8f31e1e7c0c14a0be3000" },
+    { "endpoint": "snapshot", "method": "GET", "parameter_mode": "query", "code": "Success", "request_id": "7c4789d9bbbc30e985138d406e36ad09" },
+    { "endpoint": "snapshot", "method": "GET", "parameter_mode": "body+query", "code": "Success", "request_id": "d1d04705be0be3304f72a6054551af22" }
+  ],
+  "list": { "request_id": "3f56459a4973b2396029f8631af1b6fb", "max_page": 1, "result_total": 1, "status": "shutdown" },
+  "conclusion": "GET query compatibility is demonstrated for these two read endpoints on one stopped instance. The server or intermediary reason for ignoring the documented body remains unknown. No POST variant or mutation was tested."
+}

@@ -1,6 +1,6 @@
 {
   "name": "autodl-direct",
-  "version": "0.1.3",
+  "version": "0.1.6",
   "description": "本地自建的 AutoDL 官方 API 集成。",
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
@@ -19,8 +19,8 @@
     "brandColorDark": "#2DD4BF",
     "composerIcon": "./assets/icon.svg",
     "composerIconDark": "./assets/icon-dark.svg",
-    "logo": "./assets/logo.svg",
-    "logoDark": "./assets/logo-dark.svg"
+    "logo": "./assets/icon.svg",
+    "logoDark": "./assets/icon-dark.svg"
   },
   "author": {
     "name": "Puiching-Memory",

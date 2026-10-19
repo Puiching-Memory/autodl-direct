@@ -14337,8 +14337,8 @@ var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
     }
     return count;
   }
-  function getFullPath(resolver, id2 = "", normalize) {
-    if (normalize !== false) id2 = normalizeId(id2);
+  function getFullPath(resolver, id2 = "", normalize2) {
+    if (normalize2 !== false) id2 = normalizeId(id2);
     return _getFullPath(resolver, resolver.parse(id2));
   }
   exports.getFullPath = getFullPath;
@@ -15381,7 +15381,7 @@ var require_schemes = /* @__PURE__ */ __commonJSMin(((exports, module) => {
     parse: httpParse,
     serialize: httpSerialize
   };
-  const https2 = {
+  const https3 = {
     scheme: "https",
     domainHost: http.domainHost,
     parse: httpParse,
@@ -15413,7 +15413,7 @@ var require_schemes = /* @__PURE__ */ __commonJSMin(((exports, module) => {
   };
   const SCHEMES = {
     http,
-    https: https2,
+    https: https3,
     ws,
     wss,
     urn,
@@ -15433,7 +15433,7 @@ var require_schemes = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 var require_fast_uri = /* @__PURE__ */ __commonJSMin(((exports, module) => {
   const { normalizeIPv6, removeDotSegments, recomposeAuthority, normalizeComponentEncoding, isIPv4, nonSimpleDomain } = require_utils();
   const { SCHEMES, getSchemeHandler } = require_schemes();
-  function normalize(uri, options) {
+  function normalize2(uri, options) {
     if (typeof uri === "string") uri = serialize(parse2(uri, options), options);
     else if (typeof uri === "object") uri = parse2(serialize(uri, options), options);
     return uri;
@@ -15611,7 +15611,7 @@ var require_fast_uri = /* @__PURE__ */ __commonJSMin(((exports, module) => {
   }
   const fastUri = {
     SCHEMES,
-    normalize,
+    normalize: normalize2,
     resolve,
     resolveComponent,
     equal,
@@ -20909,11 +20909,12 @@ var ENDPOINTS = Object.freeze({
   saveImage: ["POST", "/api/v1/dev/instance/pro/image/save"]
 });
 var SafeError = class extends Error {
-  constructor(code, message, requestId) {
+  constructor(code, message, requestId, diagnostics) {
     super(message);
     this.name = "SafeError";
     this.code = code;
     this.requestId = requestId;
+    this.diagnostics = diagnostics;
   }
 };
 var sensitiveKey = /^(authorization|password|root_password|jupyter_token|token|secret|cookie|private_key)$|_(password|token|secret)$/i;
@@ -20983,9 +20984,17 @@ function requestJson(spec, requestImpl = https.request) {
   if (!Object.values(ENDPOINTS).some(([method, apiPath]) => method === spec.method && apiPath === spec.path)) {
     return Promise.reject(new SafeError("ENDPOINT", "\u4EC5\u5141\u8BB8\u8C03\u7528\u5217\u51FA\u7684 AutoDL \u5B98\u65B9 API \u5730\u5740\u4E0E\u8BF7\u6C42\u65B9\u6CD5\u3002"));
   }
+  const mode = spec.parameterMode ?? "body";
+  const getEndpoint = ["status", "snapshot"].some((key) => ENDPOINTS[key][1] === spec.path);
+  if (!["body", "query", "body+query"].includes(mode) || mode !== "body" && (!getEndpoint || spec.method !== "GET" || !/^pro-[A-Za-z0-9-]{1,80}$/.test(spec.body?.instance_uuid ?? "") || Object.keys(spec.body).length !== 1)) {
+    return Promise.reject(new SafeError("ENDPOINT", "\u67E5\u8BE2\u53C2\u6570\u5F62\u5F0F\u4EC5\u5141\u8BB8\u7528\u4E8E\u5B9E\u4F8B\u8BE6\u60C5\u548C\u72B6\u6001\u7684\u5355\u4E2A Pro ID\u3002"));
+  }
   return new Promise((resolve, reject) => {
-    const body = spec.body === void 0 ? void 0 : JSON.stringify(spec.body);
-    const req = requestImpl(new URL(spec.path, API_ORIGIN), {
+    let deadline;
+    const body = mode === "query" || spec.body === void 0 ? void 0 : JSON.stringify(spec.body);
+    const url2 = new URL(spec.path, API_ORIGIN);
+    if (mode !== "body") url2.searchParams.set("instance_uuid", spec.body.instance_uuid);
+    const req = requestImpl(url2, {
       method: spec.method,
       headers: {
         Authorization: spec.token,
@@ -21004,8 +21013,16 @@ function requestJson(spec, requestImpl = https.request) {
           req.destroy(new SafeError("RESPONSE_TOO_LARGE", "AutoDL \u54CD\u5E94\u8D85\u8FC7\u8BFB\u53D6\u4E0A\u9650\u3002"));
         } else chunks.push(chunk);
       });
-      res.on("error", () => reject(new SafeError("NETWORK", "\u8BFB\u53D6 AutoDL \u54CD\u5E94\u5931\u8D25\uFF1B\u53D8\u66F4\u7ED3\u679C\u53EF\u80FD\u672A\u77E5\uFF0C\u8BF7\u5148\u67E5\u8BE2\u72B6\u6001\u3002")));
+      res.on("error", () => {
+        clearTimeout(deadline);
+        reject(new SafeError("NETWORK", "\u8BFB\u53D6 AutoDL \u54CD\u5E94\u5931\u8D25\uFF1B\u53D8\u66F4\u7ED3\u679C\u53EF\u80FD\u672A\u77E5\uFF0C\u8BF7\u5148\u67E5\u8BE2\u72B6\u6001\u3002"));
+      });
+      res.on("aborted", () => {
+        clearTimeout(deadline);
+        reject(new SafeError("NETWORK", "AutoDL \u54CD\u5E94\u4E2D\u65AD\uFF1B\u53D8\u66F4\u7ED3\u679C\u53EF\u80FD\u672A\u77E5\uFF0C\u8BF7\u5148\u67E5\u8BE2\u72B6\u6001\u3002"));
+      });
       res.on("end", () => {
+        clearTimeout(deadline);
         if (res.statusCode >= 300 && res.statusCode < 400) {
           return reject(new SafeError("REDIRECT_BLOCKED", "\u5B98\u65B9 API \u8FD4\u56DE\u91CD\u5B9A\u5411\uFF0C\u51ED\u636E\u672A\u8F6C\u53D1\u5230\u5176\u4ED6\u5730\u5740\u3002"));
         }
@@ -21021,6 +21038,13 @@ function requestJson(spec, requestImpl = https.request) {
         resolve(json);
       });
     });
+    deadline = setTimeout(() => {
+      const error2 = new SafeError("TIMEOUT", "AutoDL \u8BF7\u6C42\u8D85\u65F6\uFF1B\u53D8\u66F4\u7ED3\u679C\u53EF\u80FD\u672A\u77E5\uFF0C\u8BF7\u5148\u67E5\u8BE2\u72B6\u6001\u3002");
+      reject(error2);
+      req.destroy(error2);
+    }, 2e4);
+    deadline.unref?.();
+    req.once("error", () => clearTimeout(deadline));
     req.setTimeout(2e4, () => req.destroy(new SafeError("TIMEOUT", "AutoDL \u8BF7\u6C42\u8D85\u65F6\uFF1B\u53D8\u66F4\u7ED3\u679C\u53EF\u80FD\u672A\u77E5\uFF0C\u8BF7\u5148\u67E5\u8BE2\u72B6\u6001\u3002")));
     req.on("error", (error2) => reject(error2 instanceof SafeError ? error2 : new SafeError("NETWORK", "\u65E0\u6CD5\u8FDE\u63A5 AutoDL \u5B98\u65B9 API\uFF1B\u53D8\u66F4\u7ED3\u679C\u53EF\u80FD\u672A\u77E5\uFF0C\u8BF7\u5148\u67E5\u8BE2\u72B6\u6001\u3002")));
     req.end(body);
@@ -21031,25 +21055,326 @@ var AutoDLClient = class {
     this.tokenProvider = tokenProvider;
     this.transport = transport;
   }
-  async call(endpoint, body) {
+  async call(endpoint, body, { parameterMode = ["status", "snapshot"].includes(endpoint) ? "query" : "body" } = {}) {
     if (!Object.hasOwn(ENDPOINTS, endpoint)) throw new SafeError("ENDPOINT", "\u672A\u77E5\u63A5\u53E3\u3002");
     const token = await this.tokenProvider();
     if (!token) throw new SafeError("CREDENTIALS_MISSING", "\u672A\u914D\u7F6E AutoDL \u5F00\u53D1\u8005 Token\u3002");
     const [method, apiPath] = ENDPOINTS[endpoint];
+    const started = Date.now();
+    const diagnostics = () => ({
+      endpoint,
+      method,
+      path: apiPath,
+      parameter_mode: parameterMode,
+      elapsed_ms: Date.now() - started
+    });
     let response;
     try {
-      response = await this.transport({ method, path: apiPath, token, body });
+      response = await this.transport({ method, path: apiPath, token, body, parameterMode });
     } catch (error2) {
       if (error2 instanceof SafeError) {
-        throw new SafeError(error2.code, redact(error2.message, [token]), redact(error2.requestId, [token]));
+        throw new SafeError(error2.code, redact(error2.message, [token]), redact(error2.requestId, [token]), diagnostics());
       }
-      throw new SafeError("NETWORK", "AutoDL \u8BF7\u6C42\u672A\u5B8C\u6210\uFF1B\u53D8\u66F4\u7ED3\u679C\u53EF\u80FD\u672A\u77E5\uFF0C\u8BF7\u5148\u67E5\u8BE2\u72B6\u6001\u3002");
+      throw new SafeError("NETWORK", "AutoDL \u8BF7\u6C42\u672A\u5B8C\u6210\uFF1B\u53D8\u66F4\u7ED3\u679C\u53EF\u80FD\u672A\u77E5\uFF0C\u8BF7\u5148\u67E5\u8BE2\u72B6\u6001\u3002", void 0, diagnostics());
     }
     if (!response || response.code !== "Success") {
       const safe = redact(response ?? {}, [token]);
-      throw new SafeError(String(safe.code ?? "API_ERROR"), String(safe.msg ?? "AutoDL \u8BF7\u6C42\u5931\u8D25\u3002"), safe.request_id);
+      throw new SafeError(String(safe.code ?? "API_ERROR"), String(safe.msg ?? "AutoDL \u8BF7\u6C42\u5931\u8D25\u3002"), safe.request_id, diagnostics());
     }
-    return redact({ data: response.data, request_id: response.request_id }, [token]);
+    return redact({ data: response.data, request_id: response.request_id, diagnostics: diagnostics() }, [token]);
+  }
+};
+
+// src/instances.mjs
+var safeFailure = (error2) => ({
+  code: error2 instanceof SafeError ? error2.code : "INTERNAL",
+  ...error2 instanceof SafeError ? { message: error2.message, request_id: error2.requestId, diagnostics: error2.diagnostics } : {}
+});
+var fallbackCodes = /* @__PURE__ */ new Set(["RequestParameterIsWrong", "NETWORK", "TIMEOUT", "HTTP_ERROR", "INVALID_RESPONSE", "RESPONSE_SCHEMA"]);
+async function scanInstances(client, target, { maxPages = 100 } = {}) {
+  const entries = [], requests = [];
+  for (let page_index = 1; page_index <= maxPages; page_index++) {
+    const response = await client.call("list", { page_index, page_size: 100 });
+    const data = response.data;
+    if (!Array.isArray(data?.list) || !Number.isInteger(data.max_page) || data.max_page < 0)
+      throw new SafeError("RESPONSE_SCHEMA", "\u5B9E\u4F8B\u5217\u8868\u7F3A\u5C11\u6709\u6548 list/max_page\uFF0C\u4E0D\u80FD\u5224\u65AD\u8D44\u6E90\u4E0D\u5B58\u5728\u3002", response.request_id);
+    requests.push({ page_index, request_id: response.request_id });
+    if (target) {
+      const found = data.list.find((item) => (item.uuid ?? item.instance_uuid) === target);
+      if (found) return { found, requests, complete: false, observed_at: (/* @__PURE__ */ new Date()).toISOString() };
+    } else entries.push(...data.list);
+    if (page_index >= data.max_page) return { found: void 0, entries, requests, complete: true, observed_at: (/* @__PURE__ */ new Date()).toISOString() };
+  }
+  throw new SafeError("PAGINATION_LIMIT", "\u5DF2\u5230\u5206\u9875\u8BFB\u53D6\u4E0A\u9650\uFF0C\u4E0D\u80FD\u58F0\u79F0\u8D44\u6E90\u4E0D\u5B58\u5728\u3002");
+}
+async function instanceStatus(client, input) {
+  let failure2;
+  try {
+    const result = await client.call("status", input);
+    if (typeof result.data !== "string" || !result.data)
+      throw new SafeError("RESPONSE_SCHEMA", "\u72B6\u6001\u54CD\u5E94\u4E0D\u662F\u975E\u7A7A\u5B57\u7B26\u4E32\u3002", result.request_id);
+    return { ...result, source: "status_api", observed_at: (/* @__PURE__ */ new Date()).toISOString() };
+  } catch (error2) {
+    if (!fallbackCodes.has(error2.code)) throw error2;
+    failure2 = safeFailure(error2);
+  }
+  let scan;
+  try {
+    scan = await scanInstances(client, input.instance_uuid);
+  } catch (error2) {
+    throw new SafeError(
+      error2.code ?? "INTERNAL",
+      "\u72B6\u6001\u63A5\u53E3\u548C\u5217\u8868\u56DE\u9000\u5747\u672A\u53D6\u5F97\u53EF\u9760\u72B6\u6001\u3002",
+      error2.requestId,
+      { primary_failure: failure2, fallback_failure: safeFailure(error2) }
+    );
+  }
+  if (!scan.found) throw new SafeError(
+    "INSTANCE_NOT_FOUND",
+    "\u5DF2\u626B\u63CF\u5168\u90E8 Pro \u5206\u9875\uFF0C\u672A\u627E\u5230\u6B64\u5B9E\u4F8B\uFF1B\u8FD9\u4E0D\u4EE3\u8868\u666E\u901A\u5B9E\u4F8B\u5DF2\u5220\u9664\u3002",
+    void 0,
+    { primary_failure: failure2, list_requests: scan.requests }
+  );
+  if (typeof scan.found.status !== "string" || !scan.found.status)
+    throw new SafeError("RESPONSE_SCHEMA", "\u5339\u914D\u5B9E\u4F8B\u7F3A\u5C11\u72B6\u6001\uFF0C\u4E0D\u80FD\u786E\u8BA4\u5F00\u5173\u673A\u3002");
+  return {
+    data: scan.found.status,
+    source: "paginated_list",
+    instance_uuid: input.instance_uuid,
+    observed_at: scan.observed_at,
+    request_id: scan.requests.at(-1).request_id,
+    list_requests: scan.requests,
+    primary_failure: failure2,
+    status_at: scan.found.status_at
+  };
+}
+function connectionInfo(snapshot) {
+  const host = snapshot?.proxy_host, port = Number(snapshot?.ssh_port);
+  const match = /^ssh\s+-p\s+(\d+)\s+([A-Za-z0-9_-]+)@([A-Za-z0-9.-]+)\s*$/.exec(snapshot?.ssh_command ?? "");
+  const username = match && match[3] === host && Number(match[1]) === port ? match[2] : null;
+  const valid = typeof host === "string" && /^[A-Za-z0-9][A-Za-z0-9.-]*$/.test(host) && Number.isInteger(port) && port >= 1 && port <= 65535 && Boolean(username);
+  return {
+    available: valid,
+    host: valid ? host : null,
+    port: valid ? port : null,
+    username,
+    authentication: {
+      password: Object.hasOwn(snapshot ?? {}, "root_password") ? "provided_redacted" : "unknown",
+      local_key: "not_checked",
+      login: "not_verified"
+    },
+    ...valid ? { ssh_command: `ssh -p ${port} ${username}@${host}` } : { reason: "\u8BE6\u60C5\u7F3A\u5C11\u53EF\u9A8C\u8BC1\u7684\u8FDE\u63A5\u5B57\u6BB5\uFF1B\u4F7F\u7528\u5DF2\u6709\u6388\u6743 SSH \u522B\u540D\uFF0C\u4E0D\u731C\u6D4B\u5730\u5740\u6216\u7528\u6237\u540D\u3002" }
+  };
+}
+async function instanceInfo(client, input) {
+  try {
+    const result = await client.call("snapshot", input);
+    if (!result.data || typeof result.data !== "object" || Array.isArray(result.data))
+      throw new SafeError("RESPONSE_SCHEMA", "\u8BE6\u60C5\u54CD\u5E94\u4E0D\u662F\u5BF9\u8C61\u3002", result.request_id);
+    return { ...result, source: "snapshot_api", connection: connectionInfo(result.data), observed_at: (/* @__PURE__ */ new Date()).toISOString() };
+  } catch (error2) {
+    if (!fallbackCodes.has(error2.code)) throw error2;
+    let scan;
+    try {
+      scan = await scanInstances(client, input.instance_uuid);
+    } catch (fallbackError) {
+      throw new SafeError(
+        fallbackError.code ?? "INTERNAL",
+        "\u8BE6\u60C5\u63A5\u53E3\u548C\u5217\u8868\u56DE\u9000\u5747\u672A\u53D6\u5F97\u53EF\u9760\u4FE1\u606F\u3002",
+        fallbackError.requestId,
+        { primary_failure: safeFailure(error2), fallback_failure: safeFailure(fallbackError) }
+      );
+    }
+    if (!scan.found) throw error2;
+    return {
+      data: scan.found,
+      source: "paginated_list",
+      partial: true,
+      primary_failure: safeFailure(error2),
+      request_id: scan.requests.at(-1).request_id,
+      observed_at: scan.observed_at,
+      list_requests: scan.requests,
+      connection: { available: false, reason: "\u5217\u8868\u672A\u63D0\u4F9B SSH \u8FDE\u63A5\u4FE1\u606F\uFF0C\u4E0D\u80FD\u4ECE\u72B6\u6001\u63A8\u5BFC\u5730\u5740\u6216\u8BA4\u8BC1\u3002" }
+    };
+  }
+}
+async function reconcileMutation(client, endpoint, body, before) {
+  try {
+    if (endpoint === "powerOn" || endpoint === "powerOff") {
+      const status = await instanceStatus(client, { instance_uuid: body.instance_uuid });
+      return { observed: status, desired_state_observed: status.data === (endpoint === "powerOff" ? "shutdown" : "running") };
+    }
+    if (endpoint === "create") {
+      const scan = await scanInstances(client);
+      const old = new Set(before.entries.map((item) => item.uuid ?? item.instance_uuid));
+      const candidates = scan.entries.filter((item) => !old.has(item.uuid ?? item.instance_uuid)).map((item) => ({
+        instance_uuid: item.uuid ?? item.instance_uuid,
+        name: item.name,
+        status: item.status
+      }));
+      return {
+        observed_at: scan.observed_at,
+        list_requests: scan.requests,
+        candidates,
+        correlation: "candidate_only_not_proof",
+        before_list_requests: before.requests
+      };
+    }
+    const response = await client.call("images", { page_index: 1, page_size: 100 });
+    return {
+      request_id: response.request_id,
+      matching_images_on_page_1: response.data?.list?.filter((item) => item.name === body.image_name),
+      complete: response.data?.max_page <= 1,
+      correlation: "name_only_not_proof"
+    };
+  } catch (error2) {
+    return { verification_failure: safeFailure(error2) };
+  }
+}
+
+// src/public-data.mjs
+import https2 from "node:https";
+var PUBLIC_DATA_ORIGIN = "https://www.autodl.com";
+var PUBLIC_DATA_PATH = "/api/v1/common_data/list";
+function parameters(input = {}) {
+  if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some((key) => !["keyword", "page_index", "page_size"].includes(key)))
+    throw new SafeError("INPUT", "\u516C\u5171\u6570\u636E\u67E5\u8BE2\u4EC5\u63A5\u53D7 keyword\u3001page_index \u548C page_size\u3002");
+  const { keyword = "", page_index = 1, page_size = 20 } = input;
+  if (typeof keyword !== "string" || keyword.length > 200 || /[\u0000-\u001f\u007f]/u.test(keyword) || !Number.isInteger(page_index) || page_index < 1 || page_index > 1e4 || !Number.isInteger(page_size) || page_size < 1 || page_size > 100)
+    throw new SafeError("INPUT", "keyword \u6700\u957F200\u5B57\u7B26\uFF1B\u9875\u7801\u4E3A1-10000\uFF0C\u6BCF\u9875\u6570\u91CF\u4E3A1-100\u7684\u6574\u6570\u3002");
+  return { keyword: keyword.trim(), page_index, page_size };
+}
+function requestPublicData(input, requestImpl = https2.request) {
+  let query;
+  try {
+    query = parameters(input);
+  } catch (error2) {
+    return Promise.reject(error2);
+  }
+  const url2 = new URL(PUBLIC_DATA_PATH, PUBLIC_DATA_ORIGIN);
+  url2.search = new URLSearchParams({
+    key_word: query.keyword,
+    date_from: "",
+    date_to: "",
+    page_index: String(query.page_index),
+    page_size: String(query.page_size)
+  }).toString();
+  return new Promise((resolve, reject) => {
+    let deadline, settled = false, req;
+    const fail = (error2) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      reject(error2);
+      req?.destroy();
+    };
+    req = requestImpl(url2, { method: "GET", headers: { Accept: "application/json" } }, (res) => {
+      const chunks = [];
+      let bytes = 0;
+      res.on("data", (chunk) => {
+        bytes += chunk.length;
+        if (bytes > 2 * 1024 * 1024)
+          fail(new SafeError("RESPONSE_TOO_LARGE", "\u516C\u5171\u76EE\u5F55\u54CD\u5E94\u8D85\u8FC72 MiB\u8BFB\u53D6\u4E0A\u9650\u3002"));
+        else chunks.push(chunk);
+      });
+      res.on("error", () => fail(new SafeError("NETWORK", "\u8BFB\u53D6 AutoDL \u516C\u5171\u76EE\u5F55\u5931\u8D25\u3002")));
+      res.on("aborted", () => fail(new SafeError("NETWORK", "AutoDL \u516C\u5171\u76EE\u5F55\u54CD\u5E94\u4E2D\u65AD\u3002")));
+      res.on("end", () => {
+        if (settled) return;
+        clearTimeout(deadline);
+        if (res.statusCode >= 300 && res.statusCode < 400)
+          return fail(new SafeError("REDIRECT_BLOCKED", "\u516C\u5171\u76EE\u5F55\u8FD4\u56DE\u91CD\u5B9A\u5411\uFF1B\u672A\u8DDF\u968F\uFF0C\u4E5F\u672A\u53D1\u9001\u8D26\u6237\u51ED\u636E\u3002"));
+        if (res.statusCode < 200 || res.statusCode >= 300)
+          return fail(new SafeError("HTTP_ERROR", `\u516C\u5171\u76EE\u5F55\u8BF7\u6C42\u5931\u8D25\uFF08HTTP ${res.statusCode}\uFF09\u3002`));
+        let response;
+        try {
+          response = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+        } catch {
+          return fail(new SafeError("INVALID_RESPONSE", "\u516C\u5171\u76EE\u5F55\u8FD4\u56DE\u975EJSON\u54CD\u5E94\uFF0C\u53EF\u80FD\u662F\u767B\u5F55\u9875\u6216\u63A5\u53E3\u5DF2\u53D8\u5316\u3002"));
+        }
+        settled = true;
+        resolve(response);
+      });
+    });
+    deadline = setTimeout(() => fail(new SafeError("TIMEOUT", "AutoDL \u516C\u5171\u76EE\u5F55\u67E5\u8BE2\u8D85\u65F6\u3002")), 2e4);
+    deadline.unref?.();
+    req.setTimeout(2e4, () => fail(new SafeError("TIMEOUT", "AutoDL \u516C\u5171\u76EE\u5F55\u67E5\u8BE2\u8D85\u65F6\u3002")));
+    req.on("error", () => fail(new SafeError("NETWORK", "\u65E0\u6CD5\u8FDE\u63A5 AutoDL \u516C\u5171\u76EE\u5F55\u3002")));
+    req.end();
+  });
+}
+function normalize(response, query) {
+  const fail = () => {
+    throw new SafeError("RESPONSE_SCHEMA", "\u516C\u5171\u76EE\u5F55\u5B57\u6BB5\u6216\u5206\u9875\u7ED3\u6784\u5DF2\u53D8\u5316\uFF0C\u4E0D\u80FD\u5C06\u5176\u89C6\u4E3A\u7A7A\u76EE\u5F55\u3002", response?.request_id);
+  };
+  if (!response || response.code !== "Success")
+    throw new SafeError(
+      "PUBLIC_DATA_API",
+      "AutoDL \u516C\u5171\u76EE\u5F55\u67E5\u8BE2\u672A\u6210\u529F\uFF1B\u4E0D\u4F1A\u56DE\u9000\u53D1\u9001 Token \u6216 Cookie\u3002",
+      response?.request_id,
+      { response_code: String(response?.code ?? "missing").slice(0, 100) }
+    );
+  const data = response.data;
+  if (!data || !Number.isInteger(data.result_total) || data.result_total < 0 || !Number.isInteger(data.max_page) || data.max_page < 0 || data.page_index !== query.page_index || data.page_size !== query.page_size) fail();
+  const offset = (query.page_index - 1) * query.page_size;
+  const list = data.list === null && offset >= data.result_total ? [] : data.list;
+  if (!Array.isArray(list) || list.length > query.page_size || list.length > data.result_total || data.result_total > 0 && data.max_page !== Math.ceil(data.result_total / query.page_size) || data.result_total === 0 && data.max_page > 1 || query.page_index <= data.max_page && list.length === 0 && data.result_total > 0) fail();
+  const ids = /* @__PURE__ */ new Set();
+  const items = list.map((row) => {
+    if (!row || !Number.isInteger(row.id) || row.id < 1 || ids.has(row.id) || typeof row.data_name !== "string" || !row.data_name.trim() || row.data_name.length > 500 || typeof row.exist_path !== "string" || !row.exist_path.startsWith("/") || row.exist_path.length > 4096 || /[\u0000-\u001f\u007f]/u.test(row.exist_path) || row.exist_path.split("/").includes("..") || !Number.isFinite(row.size) || row.size < 0 || !["publisher", "description", "data_form"].every((key) => typeof row[key] === "string")) fail();
+    ids.add(row.id);
+    return {
+      id: row.id,
+      name: row.data_name,
+      instance_path: row.exist_path,
+      catalog_size_mb: row.size,
+      size_display: row.size >= 1024 ? `${(row.size / 1024).toFixed(2)} GB` : `${row.size} MB`,
+      kind: row.data_form,
+      publisher: row.publisher,
+      description: row.description,
+      instance_access: "not_verified"
+    };
+  });
+  if (list.length !== Math.min(query.page_size, Math.max(0, data.result_total - offset))) fail();
+  return {
+    source: "autodl_public_catalog",
+    source_url: "https://www.autodl.com/console/public-data",
+    api_origin: PUBLIC_DATA_ORIGIN,
+    api_path: PUBLIC_DATA_PATH,
+    authentication: "none; no Token or Cookie sent",
+    keyword: query.keyword,
+    items,
+    pagination: {
+      page_index: query.page_index,
+      page_size: query.page_size,
+      max_page: data.max_page,
+      result_total: data.result_total,
+      next_page_index: query.page_index < data.max_page ? query.page_index + 1 : null
+    },
+    complete_query_result: query.page_index === 1 && items.length === data.result_total,
+    request_id: response.request_id,
+    observed_at: (/* @__PURE__ */ new Date()).toISOString(),
+    notes: [
+      "\u6765\u81EA\u63A7\u5236\u53F0\u516C\u5171\u76EE\u5F55\u63A5\u53E3\uFF0C\u5E76\u975E\u5DF2\u627F\u8BFA\u7A33\u5B9A\u7684\u5F00\u53D1\u8005API\uFF1B\u7ED3\u6784\u53D8\u5316\u5C06\u663E\u5F0F\u62A5\u9519\u3002",
+      "\u5927\u5C0F\u6309\u63A7\u5236\u53F0MB\u5B57\u6BB5\u53CA\u51761024\u8FDB\u5236GB\u663E\u793A\u89C4\u5219\u5448\u73B0\uFF0C\u4E0D\u662F\u5B9E\u6D4B\u6587\u4EF6\u5B57\u8282\u6570\u3002",
+      "\u76EE\u5F55\u8DEF\u5F84\u4E0D\u8BC1\u660E\u76EE\u6807\u5B9E\u4F8B\u3001\u5730\u533A\u6216Pro\u4EA7\u54C1\u80FD\u591F\u6302\u8F7D\u548C\u8BFB\u53D6\uFF0C\u4F7F\u7528\u524D\u987B\u5728\u5B9E\u4F8B\u5185\u68C0\u67E5\u3002"
+    ]
+  };
+}
+var PublicDataClient = class {
+  constructor({ transport = requestPublicData } = {}) {
+    this.transport = transport;
+  }
+  async list(input = {}) {
+    const query = parameters(input);
+    let response;
+    try {
+      response = await this.transport(query);
+    } catch (error2) {
+      if (error2 instanceof SafeError) throw error2;
+      throw new SafeError("NETWORK", "AutoDL \u516C\u5171\u76EE\u5F55\u8BF7\u6C42\u672A\u5B8C\u6210\u3002");
+    }
+    return normalize(redact(response), query);
   }
 };
 
@@ -21061,7 +21386,7 @@ var page = {
   page_index: number2().int().min(1).default(1),
   page_size: number2().int().min(1).max(100).default(20)
 };
-function createTools(client = new AutoDLClient(), env = process.env) {
+function createTools(client = new AutoDLClient(), env = process.env, publicDataClient = new PublicDataClient()) {
   const read = (name, title, description, shape, run, openWorld = true) => ({
     name,
     title,
@@ -21084,7 +21409,22 @@ function createTools(client = new AutoDLClient(), env = process.env) {
         preview: { method, url: API_ORIGIN + apiPath, body: redact(body) },
         note: "\u4EC5\u9884\u89C8\uFF0C\u672A\u53D1\u9001\u8BF7\u6C42\u3002execute=true \u4F1A\u6267\u884C\u771F\u5B9E\u64CD\u4F5C\uFF1B\u5E94\u5148\u786E\u8BA4\u7528\u6237\u6388\u6743\u5DF2\u8986\u76D6\u76EE\u6807\u4E0E\u64CD\u4F5C\u3002"
       };
-      const result = await client.call(endpoint, body);
+      const before = endpoint === "create" ? await scanInstances(client) : void 0;
+      let result;
+      try {
+        result = await client.call(endpoint, body);
+      } catch (error2) {
+        if (!["NETWORK", "TIMEOUT", "HTTP_ERROR", "INVALID_RESPONSE", "RESPONSE_TOO_LARGE", "REDIRECT_BLOCKED"].includes(error2.code)) throw error2;
+        return {
+          executed: true,
+          accepted: null,
+          outcome: "unknown",
+          retry_allowed: false,
+          failure: safeFailure(error2),
+          verification: await reconcileMutation(client, endpoint, body, before),
+          note: "\u53D8\u66F4\u4EC5\u53D1\u9001\u4E00\u6B21\u3002\u5DF2\u5C1D\u8BD5\u53EA\u8BFB\u6838\u5B9E\uFF1B\u89C2\u5BDF\u5230\u76EE\u6807\u72B6\u6001\u4E0D\u8BC1\u660E\u672C\u6B21\u8BF7\u6C42\u5DF2\u6210\u529F\uFF0C\u521B\u5EFA\u5019\u9009\u4E5F\u4E0D\u662F\u56E0\u679C\u8BC1\u660E\u3002\u6838\u5B9E\u524D\u4E0D\u8981\u91CD\u590D\u53D8\u66F4\u3002"
+        };
+      }
       return {
         executed: true,
         accepted: true,
@@ -21115,9 +21455,14 @@ function createTools(client = new AutoDLClient(), env = process.env) {
       };
     }),
     read("autodl_list_instances", "\u5217\u51FA Pro \u5B9E\u4F8B", "\u5206\u9875\u67E5\u8BE2 Pro \u5B9E\u4F8B\u5217\u8868\u3002\u666E\u901A\u5BB9\u5668\u5B9E\u4F8B\u4E0D\u4F1A\u5728\u6B64\u5217\u51FA\u3002", page, (input) => client.call("list", input)),
-    read("autodl_instance_status", "\u67E5\u8BE2\u5B9E\u4F8B\u72B6\u6001", "\u67E5\u8BE2 Pro \u5B9E\u4F8B\u72B6\u6001\uFF1B\u5224\u65AD\u5F00\u5173\u673A\u662F\u5426\u771F\u6B63\u5B8C\u6210\u3002", { instance_uuid: id }, (input) => client.call("status", input)),
-    read("autodl_instance_info", "\u67E5\u8BE2\u5B9E\u4F8B\u8BE6\u60C5", "\u83B7\u53D6\u786C\u4EF6\u3001\u4F7F\u7528\u60C5\u51B5\u4E0E SSH \u5730\u5740\u3002\u5BC6\u7801\u548C Jupyter Token \u59CB\u7EC8\u8131\u654F\uFF1B\u4EF7\u683C\u6765\u81EA\u5B9E\u4F8B\u8BE6\u60C5\uFF0C\u4E0D\u662F\u521B\u5EFA\u524D\u62A5\u4EF7\u3002", { instance_uuid: id }, (input) => client.call("snapshot", input)),
+    read("autodl_instance_status", "\u67E5\u8BE2\u5B9E\u4F8B\u72B6\u6001", "\u67E5\u8BE2 Pro \u5B9E\u4F8B\u72B6\u6001\uFF1B\u5931\u8D25\u65F6\u6709\u754C\u5206\u9875\u5217\u8868\u56DE\u9000\uFF0C\u6CE8\u660E\u6765\u6E90\u3001\u65F6\u95F4\u548C\u539F\u59CB request_id\u3002", { instance_uuid: id }, (input) => instanceStatus(client, input)),
+    read("autodl_instance_info", "\u67E5\u8BE2\u5B9E\u4F8B\u8BE6\u60C5", "\u83B7\u53D6\u8BE6\u60C5\u53CA\u5B89\u5168\u4E3B\u673A\u3001\u7AEF\u53E3\u3001\u7528\u6237\u540D\u548C\u8BA4\u8BC1\u53EF\u7528\u6027\uFF1B\u672A\u9A8C\u8BC1 SSH \u767B\u5F55\u3002\u5BC6\u7801\u548C Token \u8131\u654F\uFF0C\u56DE\u9000\u5217\u8868\u4E0D\u731C\u8FDE\u63A5\u5730\u5740\u3002", { instance_uuid: id }, (input) => instanceInfo(client, input)),
     read("autodl_list_images", "\u5217\u51FA\u79C1\u6709\u955C\u50CF", "\u5206\u9875\u67E5\u8BE2 Pro \u79C1\u6709\u955C\u50CF\u4E0E\u4FDD\u5B58\u72B6\u6001\uFF1B\u516C\u5171\u955C\u50CF\u548C GPU \u89C4\u683C\u987B\u67E5\u5B98\u65B9\u6587\u6863\u3002", page, (input) => client.call("images", input)),
+    read("autodl_list_public_data", "\u67E5\u8BE2\u516C\u5171\u6570\u636E\u76EE\u5F55", "\u6309\u540D\u79F0\u641C\u7D22\u5E76\u5206\u9875\u67E5\u8BE2 AutoDL \u516C\u5171\u6570\u636E\u96C6\u548C\u6A21\u578B\u76EE\u5F55\uFF0C\u8FD4\u56DE\u6302\u8F7D\u8DEF\u5F84\u3001\u76EE\u5F55\u5927\u5C0F\u3001\u53D1\u5E03\u65B9\u53CA\u7B80\u4ECB\u3002\u4E0D\u9700\u8981Token\uFF0C\u4E0D\u53D1\u9001Token\u6216Cookie\uFF1B\u8DEF\u5F84\u4E0D\u4EE3\u8868\u76EE\u6807\u5B9E\u4F8B\u53EF\u8BBF\u95EE\u3002\u76EE\u5F55\u63A5\u53E3\u53D8\u5316\u65F6\u663E\u5F0F\u62A5\u9519\u3002", {
+      keyword: string2().max(200).regex(/^[^\u0000-\u001f\u007f]*$/u).default(""),
+      page_index: number2().int().min(1).max(1e4).default(1),
+      page_size: number2().int().min(1).max(100).default(20)
+    }, (input) => publicDataClient.list(input)),
     write("autodl_create_instance", "\u521B\u5EFA Pro \u5B9E\u4F8B", "\u521B\u5EFA\u6309\u91CF\u8BA1\u8D39\u7684 Pro \u5B9E\u4F8B\u3002\u9ED8\u8BA4\u53EA\u9884\u89C8\u3002\u9700\u8981\u5B9E\u540D\u8BA4\u8BC1\uFF1B\u4E0D\u4F1A\u8BBE\u7F6E\u81EA\u52A8\u5173\u673A\u6216\u627F\u8BFA\u4EF7\u683C\u4E0A\u9650\u3002", {
       req_gpu_amount: number2().int().min(1).max(4),
       expand_system_disk_by_gb: number2().int().min(0).max(500).default(0),
@@ -21148,14 +21493,48 @@ function errorResult(error2) {
   const safe = error2 instanceof SafeError ? {
     code: error2.code,
     message: error2.message,
-    ...error2.requestId === void 0 ? {} : { request_id: error2.requestId }
+    ...error2.requestId === void 0 ? {} : { request_id: error2.requestId },
+    ...error2.diagnostics === void 0 ? {} : { diagnostics: error2.diagnostics }
   } : { code: "INTERNAL", message: "\u64CD\u4F5C\u672A\u5B8C\u6210\u3002\u8BF7\u68C0\u67E5\u672C\u673A\u914D\u7F6E\u6216\u67E5\u770B\u5B9E\u4F8B\u72B6\u6001\u3002" };
   return { content: [{ type: "text", text: JSON.stringify(safe) }], isError: true };
 }
 
+// .codex-plugin/plugin.json
+var plugin_default = {
+  name: "autodl-direct",
+  version: "0.1.6",
+  description: "\u672C\u5730\u81EA\u5EFA\u7684 AutoDL \u5B98\u65B9 API \u96C6\u6210\u3002",
+  skills: "./skills/",
+  mcpServers: "./.mcp.json",
+  interface: {
+    displayName: "AutoDL Direct",
+    shortDescription: "\u76F4\u63A5\u7BA1\u7406 AutoDL GPU \u5B9E\u4F8B",
+    longDescription: "\u5728\u672C\u673A\u8FD0\u884C\uFF0C\u76F4\u63A5\u8BBF\u95EE AutoDL \u5B98\u65B9\u5F00\u53D1\u8005 API\u3002\u67E5\u8BE2\u4F59\u989D\u3001Pro \u5B9E\u4F8B\u548C\u955C\u50CF\uFF0C\u9884\u89C8\u6216\u6267\u884C\u521B\u5EFA\u3001\u5F00\u5173\u673A\u53CA\u4FDD\u5B58\u955C\u50CF\uFF1B\u901A\u8FC7 Skill \u914D\u5408\u7CFB\u7EDF SSH \u64CD\u4F5C\u5DF2\u6709\u5B9E\u4F8B\u3002\u7531\u672C\u5730\u5DE5\u4F5C\u533A\u81EA\u5EFA\uFF0C\u4E0E AutoDL \u5B98\u65B9\u65E0\u96B6\u5C5E\u5173\u7CFB\u3002",
+    developerName: "Puiching-Memory",
+    category: "Productivity",
+    capabilities: [
+      "Read",
+      "Write"
+    ],
+    defaultPrompt: "\u4F7F\u7528 AutoDL Direct \u68C0\u67E5\u672C\u673A\u914D\u7F6E\uFF0C\u5E76\u67E5\u8BE2\u6211\u7684\u4F59\u989D\u548C Pro \u5B9E\u4F8B\u3002",
+    brandColor: "#0F766E",
+    brandColorDark: "#2DD4BF",
+    composerIcon: "./assets/icon.svg",
+    composerIconDark: "./assets/icon-dark.svg",
+    logo: "./assets/icon.svg",
+    logoDark: "./assets/icon-dark.svg"
+  },
+  author: {
+    name: "Puiching-Memory",
+    url: "https://github.com/Puiching-Memory"
+  },
+  repository: "https://github.com/Puiching-Memory/autodl-direct",
+  license: "MIT"
+};
+
 // src/server.mjs
 function buildServer(client, env) {
-  const server = new McpServer({ name: "autodl-direct", version: "0.1.3" }, {
+  const server = new McpServer({ name: plugin_default.name, version: plugin_default.version }, {
     instructions: "\u672C\u5730\u81EA\u5EFA\u5DE5\u5177\u76F4\u63A5\u8BBF\u95EE AutoDL \u5B98\u65B9 API\uFF0C\u4EC5\u652F\u6301 Pro \u5B9E\u4F8B\u3002\u5148\u68C0\u67E5\u914D\u7F6E\u4E0E\u5B9E\u4F8B\u3002\u53D8\u66F4\u9ED8\u8BA4\u9884\u89C8\uFF1B\u7528\u6237\u5DF2\u6709\u6388\u6743\u53EF\u8986\u76D6\u771F\u5B9E\u6267\u884C\uFF0C\u65E0\u987B\u91CD\u590D\u7D22\u53D6\u540C\u4E00\u6388\u6743\u3002API \u63A5\u53D7\u8BF7\u6C42\u4E0D\u7B49\u4E8E\u64CD\u4F5C\u5B8C\u6210\uFF0C\u5FC5\u987B\u67E5\u8BE2\u72B6\u6001\u3002\u5DE5\u5177\u4E0D\u4F1A\u81EA\u52A8\u5173\u673A\uFF1B\u957F\u4EFB\u52A1\u4F7F\u7528\u7CFB\u7EDF SSH \u540E\u53F0\u8FD0\u884C\u5E76\u6309\u7EA6\u5B9A\u6536\u5C3E\u3002\u51ED\u636E\u4E0D\u5E94\u51FA\u73B0\u5728\u804A\u5929\u6216\u65E5\u5FD7\u3002"
   });
   for (const tool of createTools(client, env)) {
@@ -21185,13 +21564,21 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
 export {
   AutoDLClient,
   ENDPOINTS,
+  PUBLIC_DATA_ORIGIN,
+  PUBLIC_DATA_PATH,
+  PublicDataClient,
   SafeError,
   buildServer,
+  connectionInfo,
   createTools,
   errorResult,
+  instanceInfo,
+  instanceStatus,
   loadToken,
   redact,
-  requestJson
+  requestJson,
+  requestPublicData,
+  scanInstances
 };
 /*! Bundled license information:
 

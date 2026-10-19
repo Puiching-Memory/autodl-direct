@@ -1,11 +1,17 @@
 import { pathToFileURL } from 'node:url';
 import { createTools, errorResult, SafeError } from '../dist/server.mjs';
 
-const usage = '用法：node scripts/query-account.mjs [status|balance|instances|account] [page_index] [page_size]。仅 instances/account 接受分页参数；此入口只支持查询。';
+const usage = '用法：query-account.mjs [status|balance|instances|account] [page_index] [page_size]；或 [instance-status|instance-info] <pro-ID>。此入口只支持查询。';
 
 export async function runQuery(args = [], { client, env = process.env } = {}) {
   const [command = 'account', pageIndex = '1', pageSize = '100'] = args;
   const paged = command === 'instances' || command === 'account';
+  const specific = ['instance-status', 'instance-info'].includes(command);
+  if (specific) {
+    if (args.length !== 2 || !/^pro-[A-Za-z0-9-]{1,80}$/.test(pageIndex)) throw new SafeError('USAGE', usage);
+    const tool = createTools(client, env).find(item => item.name === (command === 'instance-status' ? 'autodl_instance_status' : 'autodl_instance_info'));
+    return tool.run(tool.schema.parse({ instance_uuid: pageIndex }));
+  }
   if (!['status', 'balance', 'instances', 'account'].includes(command) ||
       args.length > (paged ? 3 : 1) ||
       (paged && (![pageIndex, pageSize].every(value => /^[1-9][0-9]*$/.test(value)) ||

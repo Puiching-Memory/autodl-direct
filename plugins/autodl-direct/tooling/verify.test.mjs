@@ -204,6 +204,32 @@ test('GET JSON body and raw Authorization are preserved without Bearer conversio
   assert.equal(result.data, 'running');
 });
 
+test('GET query transmits the validated instance ID without a JSON body', async () => {
+  const captured = {};
+  await requestJson({ path: '/api/v1/dev/instance/pro/status', method: 'GET', token: dummyToken,
+    body: { instance_uuid: 'pro-fixture' }, parameterMode: 'query' }, mockRequest(200, { code: 'Success', data: 'shutdown' }, captured));
+  assert.equal(captured.url, 'https://api.autodl.com/api/v1/dev/instance/pro/status?instance_uuid=pro-fixture');
+  assert.equal(captured.body, undefined);
+  assert.equal(captured.options.headers['Content-Length'], undefined);
+  await assert.rejects(() => requestJson({ path: '/api/v1/dev/instance/pro/create', method: 'POST', token: dummyToken,
+    body: { instance_uuid: 'pro-fixture' }, parameterMode: 'query' }), error => error.code === 'ENDPOINT');
+});
+
+test('aborted response rejects safely instead of leaving a pending API call', async () => {
+  const impl = (_url, _options, callback) => {
+    const req = new EventEmitter();
+    req.setTimeout = () => req;
+    req.destroy = error => req.emit('error', error);
+    req.end = () => queueMicrotask(() => {
+      const res = new EventEmitter(); res.statusCode = 200;
+      callback(res); res.emit('data', Buffer.from('{')); res.emit('aborted');
+    });
+    return req;
+  };
+  await assert.rejects(() => requestJson({ path: '/api/v1/dev/wallet/balance', method: 'POST', token: dummyToken }, impl),
+    error => error.code === 'NETWORK' && !error.message.includes(dummyToken));
+});
+
 test('redirects are rejected and mutation network errors are not retried', async () => {
   await assert.rejects(() => requestJson({ path: '/api/v1/dev/wallet/balance', method: 'POST', token: dummyToken },
     mockRequest(302, { next: 'https://other.example/' }, {})), error => error.code === 'REDIRECT_BLOCKED');
@@ -230,16 +256,24 @@ test('transport blocks unknown origins, paths and methods before credential tran
   assert.equal(calls, 0);
 });
 
-test('MCP official client discovers ten tools and performs harmless calls against built runtime', { timeout: 20000 }, async () => {
+test('MCP official client discovers eleven tools with the manifest version and performs harmless calls', { timeout: 20000 }, async () => {
+  const manifest = JSON.parse(await readFile(path.join(plugin, '.codex-plugin/plugin.json'), 'utf8'));
+  const mcp = JSON.parse(await readFile(path.join(plugin, manifest.mcpServers), 'utf8'));
+  const runtime = mcp.mcpServers['autodl-direct'];
+  const cwd = path.resolve(plugin, runtime.cwd ?? '.');
+  // Launch exactly the configured relative entrypoint from Codex's resolved cwd.
+  // An absolute-path test would hide unexpanded ${PLUGIN_ROOT} placeholders.
   const transport = new StdioClientTransport({ command: process.execPath,
-    args: [path.join(plugin, 'dist/server.mjs')], env: testEnv, stderr: 'pipe' });
+    args: runtime.args, cwd, env: testEnv, stderr: 'pipe' });
   const protocol = new Client({ name: 'autodl-direct-verifier', version: '1.0.0' });
   let diagnostics = '';
   transport.stderr?.on('data', chunk => { diagnostics += chunk.toString(); });
   try {
     await protocol.connect(transport);
+    assert.equal(protocol.getServerVersion().version, manifest.version);
     const { tools } = await protocol.listTools();
-    assert.equal(tools.length, 10);
+    assert.equal(tools.length, 11);
+    assert.equal(tools.find(x => x.name === 'autodl_list_public_data').annotations.readOnlyHint, true);
     assert.ok(tools.find(x => x.name === 'autodl_balance').annotations.readOnlyHint);
     assert.equal(tools.find(x => x.name === 'autodl_balance').annotations.openWorldHint, true);
     assert.equal(tools.find(x => x.name === 'autodl_setup_status').annotations.openWorldHint, false);
@@ -256,20 +290,78 @@ test('MCP official client discovers ten tools and performs harmless calls agains
   assert.equal(diagnostics, '');
 });
 
-test('portable and compatibility manifests resolve contained assets and actual runtime', async () => {
-  const manifest = JSON.parse(await readFile(path.join(plugin, 'plugin.json'), 'utf8'));
+test('Codex manifest resolves shared assets, skill, runtime and repository catalog', async () => {
+  const manifest = JSON.parse(await readFile(path.join(plugin, '.codex-plugin/plugin.json'), 'utf8'));
   assert.equal(manifest.name, 'autodl-direct');
-  assert.ok(manifest.extensions['com.openai'].interface.shortDescription.length <= 30);
-  const overlay = JSON.parse(await readFile(path.join(plugin, '.codex-plugin/plugin.json'), 'utf8'));
-  assert.equal(overlay.version, manifest.version);
+  assert.ok(manifest.interface.shortDescription.length <= 30);
+  const paths = [];
   for (const field of ['composerIcon', 'composerIconDark', 'logo', 'logoDark']) {
-    const rel = manifest.extensions['com.openai'].interface[field];
+    const rel = manifest.interface[field];
     assert.ok(rel.startsWith('./assets/'));
+    paths.push(rel);
     const svg = await readFile(path.join(plugin, rel), 'utf8');
-    assert.ok(svg.includes('width="512" height="512"'));
+    assert.match(svg, /<svg\s/);
   }
-  const mcp = JSON.parse(await readFile(path.join(plugin, 'mcp.json'), 'utf8'));
+  assert.equal(new Set(paths).size, 2);
+  assert.equal(manifest.interface.logo, manifest.interface.composerIcon);
+  assert.equal(manifest.interface.logoDark, manifest.interface.composerIconDark);
+  assert.ok((await readFile(path.join(plugin, manifest.skills, 'autodl/SKILL.md'), 'utf8')).startsWith('---'));
+  const mcp = JSON.parse(await readFile(path.join(plugin, manifest.mcpServers), 'utf8'));
   const runtime = mcp.mcpServers['autodl-direct'];
-  assert.equal(runtime.type, 'stdio');
-  assert.ok((await readFile(path.join(plugin, runtime.args[0].replace('${PLUGIN_ROOT}/', '')))).length > 0);
+  assert.equal(runtime.command, 'node');
+  assert.equal(runtime.cwd, '.');
+  assert.equal(runtime.args[0], './dist/server.mjs');
+  assert.ok((await readFile(path.resolve(plugin, runtime.cwd, runtime.args[0]))).length > 0);
+  const repository = path.resolve(plugin, '../..');
+  const catalog = JSON.parse(await readFile(path.join(repository, '.agents/plugins/marketplace.json'), 'utf8'));
+  assert.equal(path.resolve(repository, catalog.plugins[0].source.path), plugin);
+});
+
+test('repository installer validates source and handles CLI failures without writing a catalog', {
+  skip: process.platform !== 'win32', timeout: 30000
+}, async () => {
+  const tempRoot = path.resolve(tmpdir());
+  const fixtureRoot = await mkdtemp(path.join(tempRoot, 'autodl-install-test-'));
+  const fixturePlugin = path.join(fixtureRoot, 'plugins/autodl-direct');
+  const script = path.join(fixturePlugin, 'scripts/Install-Plugin.ps1');
+  const catalogFile = path.join(fixtureRoot, '.agents/plugins/marketplace.json');
+  const traceFile = path.join(fixtureRoot, 'calls.json');
+  const powershell = path.join(process.env.SystemRoot ?? process.env.SYSTEMROOT ?? 'C:\\Windows',
+    'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+  const command = `$global:taskCalls = @(); function global:codex {
+    $global:taskCalls += ,@($args)
+    $global:LASTEXITCODE = if ($env:AUTODL_TEST_FAIL -eq [string]$global:taskCalls.Count) { 1 } else { 0 }
+  }; try { & $env:AUTODL_TEST_SCRIPT } finally {
+    [IO.File]::WriteAllText($env:AUTODL_TEST_TRACE, (ConvertTo-Json -InputObject @($global:taskCalls) -Depth 5))
+  }`;
+  const run = failure => promisify(execFile)(powershell, ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', command],
+    { env: { ...process.env, AUTODL_TEST_SCRIPT: script, AUTODL_TEST_TRACE: traceFile,
+      AUTODL_TEST_FAIL: String(failure ?? 0) }, windowsHide: true, timeout: 10000 });
+  try {
+    await mkdir(path.dirname(script), { recursive: true });
+    await mkdir(path.dirname(catalogFile), { recursive: true });
+    await writeFile(script, await readFile(path.join(plugin, 'scripts/Install-Plugin.ps1')));
+    await assert.rejects(() => run());
+    assert.deepEqual(JSON.parse(await readFile(traceFile, 'utf8')), []);
+    const catalog = JSON.parse(await readFile(path.resolve(plugin, '../../.agents/plugins/marketplace.json'), 'utf8'));
+    const contents = JSON.stringify(catalog);
+    await writeFile(catalogFile, contents);
+    await run();
+    assert.deepEqual(JSON.parse(await readFile(traceFile, 'utf8')), [
+      ['plugin', 'marketplace', 'add', fixtureRoot], ['plugin', 'add', 'autodl-direct@autodl-tools']
+    ]);
+    assert.equal(await readFile(catalogFile, 'utf8'), contents);
+    for (const failure of [1, 2]) {
+      await assert.rejects(() => run(failure));
+      assert.equal(JSON.parse(await readFile(traceFile, 'utf8')).length, failure);
+    }
+    catalog.plugins[0].source.path = './plugins/other';
+    await writeFile(catalogFile, JSON.stringify(catalog));
+    await assert.rejects(() => run());
+    assert.deepEqual(JSON.parse(await readFile(traceFile, 'utf8')), []);
+  } finally {
+    assert.equal(path.dirname(fixtureRoot), tempRoot);
+    assert.ok(path.basename(fixtureRoot).startsWith('autodl-install-test-'));
+    await rm(fixtureRoot, { recursive: true, force: true });
+  }
 });

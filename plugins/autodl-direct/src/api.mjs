@@ -19,11 +19,12 @@ export const ENDPOINTS = Object.freeze({
 });
 
 export class SafeError extends Error {
-  constructor(code, message, requestId) {
+  constructor(code, message, requestId, diagnostics) {
     super(message);
     this.name = 'SafeError';
     this.code = code;
     this.requestId = requestId;
+    this.diagnostics = diagnostics;
   }
 }
 
@@ -85,15 +86,26 @@ export async function loadToken(env = process.env) {
   }
 }
 
-// https.request is deliberate: AutoDL documents JSON bodies on its GET endpoints.
-// fetch refuses GET bodies. Redirects and automatic retries are never followed.
+// Keep GET bodies for the read-only diagnostic comparator. Production status and
+// snapshot use query parameters: verified against a stopped instance 2026-10-07.
+// Redirects and automatic retries are never followed.
 export function requestJson(spec, requestImpl = https.request) {
   if (!Object.values(ENDPOINTS).some(([method, apiPath]) => method === spec.method && apiPath === spec.path)) {
     return Promise.reject(new SafeError('ENDPOINT', '仅允许调用列出的 AutoDL 官方 API 地址与请求方法。'));
   }
+  const mode = spec.parameterMode ?? 'body';
+  const getEndpoint = ['status', 'snapshot'].some(key => ENDPOINTS[key][1] === spec.path);
+  if (!['body', 'query', 'body+query'].includes(mode) || (mode !== 'body' &&
+      (!getEndpoint || spec.method !== 'GET' || !/^pro-[A-Za-z0-9-]{1,80}$/.test(spec.body?.instance_uuid ?? '') ||
+      Object.keys(spec.body).length !== 1))) {
+    return Promise.reject(new SafeError('ENDPOINT', '查询参数形式仅允许用于实例详情和状态的单个 Pro ID。'));
+  }
   return new Promise((resolve, reject) => {
-    const body = spec.body === undefined ? undefined : JSON.stringify(spec.body);
-    const req = requestImpl(new URL(spec.path, API_ORIGIN), {
+    let deadline;
+    const body = mode === 'query' || spec.body === undefined ? undefined : JSON.stringify(spec.body);
+    const url = new URL(spec.path, API_ORIGIN);
+    if (mode !== 'body') url.searchParams.set('instance_uuid', spec.body.instance_uuid);
+    const req = requestImpl(url, {
       method: spec.method,
       headers: {
         Authorization: spec.token,
@@ -111,8 +123,10 @@ export function requestJson(spec, requestImpl = https.request) {
           req.destroy(new SafeError('RESPONSE_TOO_LARGE', 'AutoDL 响应超过读取上限。'));
         } else chunks.push(chunk);
       });
-      res.on('error', () => reject(new SafeError('NETWORK', '读取 AutoDL 响应失败；变更结果可能未知，请先查询状态。')));
+      res.on('error', () => { clearTimeout(deadline); reject(new SafeError('NETWORK', '读取 AutoDL 响应失败；变更结果可能未知，请先查询状态。')); });
+      res.on('aborted', () => { clearTimeout(deadline); reject(new SafeError('NETWORK', 'AutoDL 响应中断；变更结果可能未知，请先查询状态。')); });
       res.on('end', () => {
+        clearTimeout(deadline);
         if (res.statusCode >= 300 && res.statusCode < 400) {
           return reject(new SafeError('REDIRECT_BLOCKED', '官方 API 返回重定向，凭据未转发到其他地址。'));
         }
@@ -125,6 +139,12 @@ export function requestJson(spec, requestImpl = https.request) {
         resolve(json);
       });
     });
+    deadline = setTimeout(() => {
+      const error = new SafeError('TIMEOUT', 'AutoDL 请求超时；变更结果可能未知，请先查询状态。');
+      reject(error); req.destroy(error);
+    }, 20000);
+    deadline.unref?.();
+    req.once('error', () => clearTimeout(deadline));
     req.setTimeout(20000, () => req.destroy(new SafeError('TIMEOUT', 'AutoDL 请求超时；变更结果可能未知，请先查询状态。')));
     req.on('error', error => reject(error instanceof SafeError ? error :
       new SafeError('NETWORK', '无法连接 AutoDL 官方 API；变更结果可能未知，请先查询状态。')));
@@ -137,24 +157,27 @@ export class AutoDLClient {
     this.tokenProvider = tokenProvider;
     this.transport = transport;
   }
-  async call(endpoint, body) {
+  async call(endpoint, body, { parameterMode = ['status', 'snapshot'].includes(endpoint) ? 'query' : 'body' } = {}) {
     if (!Object.hasOwn(ENDPOINTS, endpoint)) throw new SafeError('ENDPOINT', '未知接口。');
     const token = await this.tokenProvider();
     if (!token) throw new SafeError('CREDENTIALS_MISSING', '未配置 AutoDL 开发者 Token。');
     const [method, apiPath] = ENDPOINTS[endpoint];
+    const started = Date.now();
+    const diagnostics = () => ({ endpoint, method, path: apiPath, parameter_mode: parameterMode,
+      elapsed_ms: Date.now() - started });
     let response;
     try {
-      response = await this.transport({ method, path: apiPath, token, body });
+      response = await this.transport({ method, path: apiPath, token, body, parameterMode });
     } catch (error) {
       if (error instanceof SafeError) {
-        throw new SafeError(error.code, redact(error.message, [token]), redact(error.requestId, [token]));
+        throw new SafeError(error.code, redact(error.message, [token]), redact(error.requestId, [token]), diagnostics());
       }
-      throw new SafeError('NETWORK', 'AutoDL 请求未完成；变更结果可能未知，请先查询状态。');
+      throw new SafeError('NETWORK', 'AutoDL 请求未完成；变更结果可能未知，请先查询状态。', undefined, diagnostics());
     }
     if (!response || response.code !== 'Success') {
       const safe = redact(response ?? {}, [token]);
-      throw new SafeError(String(safe.code ?? 'API_ERROR'), String(safe.msg ?? 'AutoDL 请求失败。'), safe.request_id);
+      throw new SafeError(String(safe.code ?? 'API_ERROR'), String(safe.msg ?? 'AutoDL 请求失败。'), safe.request_id, diagnostics());
     }
-    return redact({ data: response.data, request_id: response.request_id }, [token]);
+    return redact({ data: response.data, request_id: response.request_id, diagnostics: diagnostics() }, [token]);
   }
 }
