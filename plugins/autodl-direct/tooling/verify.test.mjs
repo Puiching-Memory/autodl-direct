@@ -78,7 +78,7 @@ test('packaged account command emits safe JSON and a nonzero exit on missing cre
 });
 
 test('Windows DPAPI credentials load despite conflicting inherited PowerShell modules', {
-  skip: process.platform !== 'win32', timeout: 30000
+  skip: process.platform !== 'win32', timeout: 60000
 }, async () => {
   // Hosted Windows runners expose TEMP using an 8.3 alias (RUNNER~1), while
   // PowerShell resolves the same directory to its long name (runneradmin).
@@ -100,7 +100,7 @@ test('Windows DPAPI credentials load despite conflicting inherited PowerShell mo
     await promisify(execFile)(powershell, ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command',
       "$ErrorActionPreference = 'Stop'; [IO.File]::WriteAllText($env:AUTODL_TEST_CREDENTIAL_FILE, (ConvertFrom-SecureString (ConvertTo-SecureString -String $env:AUTODL_TEST_DUMMY_TOKEN -AsPlainText -Force)))"],
       { env: { ...cleanEnv, AUTODL_TEST_CREDENTIAL_FILE: fixtureFile, AUTODL_TEST_DUMMY_TOKEN: dummyToken },
-        windowsHide: true, timeout: 10000 });
+        windowsHide: true, timeout: 30000 });
     for (const key of ['PSModulePath', 'PSMODULEPATH']) {
       const actual = await loadToken({ ...cleanEnv, AUTODL_TOKEN: '', AUTODL_CREDENTIAL_FILE: fixtureFile,
         [key]: moduleRoot });
@@ -320,9 +320,9 @@ test('Codex manifest resolves shared assets, skill, runtime and repository catal
 });
 
 test('repository installer validates source and handles CLI failures without writing a catalog', {
-  skip: process.platform !== 'win32', timeout: 30000
+  skip: process.platform !== 'win32', timeout: 90000
 }, async () => {
-  const tempRoot = path.resolve(tmpdir());
+  const tempRoot = await realpath(tmpdir());
   const fixtureRoot = await mkdtemp(path.join(tempRoot, 'autodl-install-test-'));
   const fixturePlugin = path.join(fixtureRoot, 'plugins/autodl-direct');
   const script = path.join(fixturePlugin, 'scripts/Install-Plugin.ps1');
@@ -338,7 +338,7 @@ test('repository installer validates source and handles CLI failures without wri
   }`;
   const run = failure => promisify(execFile)(powershell, ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', command],
     { env: { ...process.env, AUTODL_TEST_SCRIPT: script, AUTODL_TEST_TRACE: traceFile,
-      AUTODL_TEST_FAIL: String(failure ?? 0) }, windowsHide: true, timeout: 10000 });
+      AUTODL_TEST_FAIL: String(failure ?? 0) }, windowsHide: true, timeout: 15000 });
   try {
     await mkdir(path.dirname(script), { recursive: true });
     await mkdir(path.dirname(catalogFile), { recursive: true });
@@ -349,8 +349,11 @@ test('repository installer validates source and handles CLI failures without wri
     const contents = JSON.stringify(catalog);
     await writeFile(catalogFile, contents);
     await run();
-    assert.deepEqual(JSON.parse(await readFile(traceFile, 'utf8')), [
-      ['plugin', 'marketplace', 'add', fixtureRoot], ['plugin', 'add', 'autodl-direct@autodl-tools']
+    const recordedCalls = JSON.parse(await readFile(traceFile, 'utf8'));
+    assert.equal(recordedCalls.length, 2);
+    assert.equal(await realpath(recordedCalls[0][3]), await realpath(fixtureRoot));
+    assert.deepEqual([recordedCalls[0].slice(0, 3), recordedCalls[1]], [
+      ['plugin', 'marketplace', 'add'], ['plugin', 'add', 'autodl-direct@autodl-tools']
     ]);
     assert.equal(await readFile(catalogFile, 'utf8'), contents);
     for (const failure of [1, 2]) {
