@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { readFile, writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, mkdtemp, realpath, rm } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { tmpdir } from 'node:os';
@@ -80,7 +80,9 @@ test('packaged account command emits safe JSON and a nonzero exit on missing cre
 test('Windows DPAPI credentials load despite conflicting inherited PowerShell modules', {
   skip: process.platform !== 'win32', timeout: 30000
 }, async () => {
-  const tempRoot = path.resolve(tmpdir());
+  // Hosted Windows runners expose TEMP using an 8.3 alias (RUNNER~1), while
+  // PowerShell resolves the same directory to its long name (runneradmin).
+  const tempRoot = await realpath(tmpdir());
   const fixtureRoot = await mkdtemp(path.join(tempRoot, 'autodl-credential-test-'));
   const fixtureFile = path.join(fixtureRoot, 'fixture.dpapi');
   const moduleRoot = path.join(fixtureRoot, 'modules');

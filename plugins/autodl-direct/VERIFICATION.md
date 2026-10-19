@@ -4,6 +4,8 @@
 
 本机 Windows、Node.js 24.21.0。重新构建随包运行的 dist/server.mjs，运行 verify.test.mjs、instances.test.mjs、public-data.test.mjs：41 项通过、0 失败、0 跳过。测试覆盖真实清单启动、公共查询不读取账户凭据、固定 GET 地址、参数校验、分页完整性、空结果、字段变化、重定向、超时与响应大小上限。
 
+首次 GitHub Actions 检查发现安装器测试将 Windows 临时目录的短名称与 PowerShell 返回的完整名称直接比较，Node.js 22 上 40 项通过、1 项失败。测试已改为先解析真实临时路径；不改变安装器或公共查询的运行逻辑。后续 CI 结果以对应提交的 Actions 记录为准。
+
 使用 Codex 正常安装命令安装 0.1.6，未手工修改缓存。官方 MCP 客户端按安装清单启动，服务版本 0.1.6，发现 11 个工具。测试进程清除 Token 环境变量并使用不存在的凭据路径，配置查询确认 credentialsConfigured=false；公共目录工具的 6 个真实场景全部通过：
 
 | 场景 | 当次观测 |
