@@ -8,6 +8,8 @@ export { AutoDLClient, requestJson, redact, SafeError, ENDPOINTS, loadToken } fr
 export { createTools, errorResult } from './tools.mjs';
 export { instanceStatus, instanceInfo, scanInstances, connectionInfo } from './instances.mjs';
 export { PublicDataClient, requestPublicData, PUBLIC_DATA_ORIGIN, PUBLIC_DATA_PATH } from './public-data.mjs';
+export { ProCatalogClient, requestProCatalog, PRO_CATALOG_ORIGIN, PRO_CATALOG_PATHS } from './pro-catalog.mjs';
+export { SshManager, validatePublicKey, sshBootstrap } from './ssh.mjs';
 
 export function buildServer(client, env) {
   const server = new McpServer({ name: manifest.name, version: manifest.version }, {

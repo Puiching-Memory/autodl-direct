@@ -5,7 +5,7 @@
   <img src="plugins/autodl-direct/assets/icon.svg" alt="AutoDL Direct" width="96" height="96">
 </picture>
 
-在 Windows Codex 本机运行，通过 AutoDL 官方 API 管理 Pro 实例，并查询公共数据目录。由此私有 Git 仓库分发，采用 MIT 许可证，与 AutoDL、OpenAI 无隶属关系。当前版本为 0.1.6；版本唯一来源为插件的 [Codex 清单](plugins/autodl-direct/.codex-plugin/plugin.json)。2026-10-19 已本机安装，41 项离线测试和无凭据的真实 MCP 公共目录查询通过。
+在 Windows Codex 本机运行，通过 AutoDL 官方 API 管理 Pro 实例，查询公共数据目录和公开库存/标价，并准备专用 SSH 接入。由此私有 Git 仓库分发，采用 MIT 许可证，与 AutoDL、OpenAI 无隶属关系。当前版本为 0.1.8；版本唯一来源为插件的 [Codex 清单](plugins/autodl-direct/.codex-plugin/plugin.json)。验证范围见 [验证记录](plugins/autodl-direct/VERIFICATION.md)。
 
 ## 安装与配置
 
@@ -26,11 +26,11 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\plugins\autodl-direct\
 
 ## 功能与职责边界
 
-11 个 MCP 工具涵盖公共数据目录、配置、余额、分页 Pro 实例、状态、安全连接信息、私有镜像以及创建、开关机、保存镜像。公共目录查询不需要 Token，支持按名称搜索和分页，返回数据集/模型名称、实例路径、目录大小和发布方；目录路径不等于目标实例可访问。变更默认预览，`execute=true` 才发送请求。接口失败保留脱敏诊断和 request_id；状态可回退到分页列表，变更结果不确定时只读核实并阻止盲目重试。详见 [工具说明](plugins/autodl-direct/README.md) 和 [验证记录](plugins/autodl-direct/VERIFICATION.md)。
+14 个 MCP 工具涵盖公共数据目录、公开 Pro 库存/标价、专用 SSH 密钥/配置、余额、分页 Pro 实例、状态、私有镜像及生命周期操作。公共查询不需要 Token；GPU 标价不是账户折扣、优惠券和磁盘收费合计后的订单总价。创建/开机可附带公钥安装命令，私钥只在本机。生命周期操作默认预览，`execute=true` 才发送变更请求。接口失败保留脱敏诊断和 request_id；状态可回退到分页列表，变更结果不确定时只读核实并阻止盲目重试。详见 [工具说明](plugins/autodl-direct/README.md) 和 [验证记录](plugins/autodl-direct/VERIFICATION.md)。
 
 | 层次 | 责任 |
 | --- | --- |
-| 插件 | AutoDL API 参数、鉴权与脱敏、预览、兼容诊断、分页回退、安全连接字段、变更不确定时核实 |
+| 插件 | AutoDL API 参数、鉴权与脱敏、预览、兼容诊断、分页回退、公开库存与标价、专用 SSH 密钥/连接配置、公钥开机安装、变更不确定时核实 |
 | Agent | 授权与预算约束、计费前准备、网络路线比较、总体传输并发、监控及按约定收尾 |
 | 项目 | 下载缓存、SSH/SFTP、训练环境、任务恢复、PID/日志/退出码、产物摘要与正确性 |
 | AutoDL | 库存、价格、计费、调度、实际关机、平台定时关机和内置加速 |
@@ -49,7 +49,7 @@ API 接受请求不等于完成；停止训练不等于平台关机。平台定�
 ```powershell
 npm.cmd ci --prefix plugins/autodl-direct/tooling --ignore-scripts --no-audit --no-fund
 node plugins/autodl-direct/tooling/build.mjs
-node --test plugins/autodl-direct/tooling/verify.test.mjs plugins/autodl-direct/tooling/instances.test.mjs plugins/autodl-direct/tooling/public-data.test.mjs
+node --test plugins/autodl-direct/tooling/*.test.mjs
 ```
 
 离线测试使用无效固定凭据和模拟请求，不读取实际 Token 或执行 GPU 操作。CI 检查 Windows Node.js 22/24。真实只读证据、安装验证、未验证能力和复现方法统一放在 [VERIFICATION](plugins/autodl-direct/VERIFICATION.md)。修改后重建随仓库安装的 dist；发布、安装及付费验证需要对应授权。本次更新已本机安装；未执行付费实例操作，Git 更新不等于创建 GitHub Release。

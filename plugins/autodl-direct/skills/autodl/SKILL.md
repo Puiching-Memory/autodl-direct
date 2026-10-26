@@ -5,7 +5,15 @@ description: 使用本地自建 AutoDL Direct 插件查询余额和 Pro 实例�
 
 # AutoDL Direct
 
-Use the bundled `autodl-direct` MCP tools. This is a local integration written in this workspace, not an AutoDL-authored product. Account and lifecycle requests go directly to `https://api.autodl.com`. Public catalog queries use a separate, fixed `https://www.autodl.com/api/v1/common_data/list` endpoint without Token or Cookie. It has no account-sharing service.
+Use the bundled `autodl-direct` MCP tools. This is a local integration written in this workspace, not an AutoDL-authored product. Account and lifecycle requests go directly to `https://api.autodl.com`. Public catalog and Pro inventory/list-price queries use separate, fixed read-only `www.autodl.com` endpoints without Token or Cookie. It has no account-sharing service.
+
+## Query Pro inventory and list prices without login
+
+Use `autodl_pro_catalog` without `gpu_name` to discover exact GPU names in the requested `data_center_list` (default westDC3 and beijingDC2). Then pass an exact returned `gpu_name` to obtain `gpu_spec_uuid`, host CPU/memory ranges, list yuan per GPU-hour and published membership-level prices. Use `gpu_spec_uuid` for developer API creation, never the numeric console `spec_id`. Host memory is not GPU VRAM. Inventory is an aggregate snapshot, not a reservation or guarantee of availability.
+
+These public read-only console endpoints are not a promised stable developer API. Do not forward the developer Token or browser cookies, even on login failure. The account-specific order preview requires a web session: `account_final_quote=unavailable_without_web_session` is an explicit limitation. Do not label a published member price as the user's discount or a GPU list price as the total bill; disk charges remain unresolved. Re-query immediately before provisioning and retain the time and price basis in project records.
+
+If MCP is unavailable, use the packaged no-credential read-only fallback `node "<plugin-root>/scripts/query-pro-catalog.mjs" --gpu-name "vGPU-48GB" --regions westDC3,beijingDC2`. Omit `--gpu-name` to discover names. It accepts no account credentials and cannot create or start instances.
 
 ## Query public datasets and models
 
@@ -42,7 +50,7 @@ On `CREDENTIALS_UNREADABLE`, check the execution context and plugin connection b
 
 ### Prepare before billing
 
-The plugin owns AutoDL API lifecycle reliability. The Agent and project own downloads, caches, SSH/SFTP, training records, PID/log/exit-code production, model/checkpoint recovery and output correctness. Browser clipboard, upload permissions and disconnections are host boundaries.
+The plugin owns AutoDL API lifecycle reliability, public Pro catalog queries, dedicated local SSH key/config preparation and public-key startup installation. The Agent and project own downloads, caches, actual SSH/SFTP execution, training records, PID/log/exit-code production, model/checkpoint recovery and output correctness. Browser clipboard, upload permissions and disconnections are host boundaries.
 
 Before creating or starting a billed instance:
 
@@ -60,6 +68,10 @@ After a mutation, API acceptance is only a submission result. Poll with reasonab
 ## Run work through system SSH
 
 Use the operating system's OpenSSH and SCP/SFTP. Prefer an existing user-authorized SSH alias and key. If authentication or host verification requires the user, present the exact connection command for their local terminal; do not scrape passwords from outputs or disable host-key verification. Pro connection details can be refreshed with `autodl_instance_info`; the password remains redacted.
+
+For a new instance without an existing authorized key, use `autodl_prepare_ssh_key` with a task-specific `key_name`, preview first, then execute within the user's authorized setup scope. It creates or reuses a local unencrypted Ed25519 key under `~/.ssh/autodl-direct/`, returning only the public key, fingerprint and paths. Never read, print, upload or put the private key into a startup command. Pass the returned `ssh_public_key` into a preview of `autodl_create_instance` or `autodl_power_on`; it composes an append-only root authorized_keys installation before the workload. This public-key value is public setup data, not an account credential. Existing instances need an authorized restart or another authorized SSH route; do not restart someone else's running workload just to install a key. A startup failure does not stop billing.
+
+After starting, `autodl_prepare_ssh_connection` refreshes safe snapshot connection fields. Its default preview performs that read-only account query but writes no files; execution writes a dedicated config and returns SSH/SCP/SFTP argument arrays. It does not modify the user's main SSH config, turn off host verification, establish login or prove that the remote key installation worked. Run the actual system SSH command and verify first-contact fingerprints through a trusted channel; local key generation/config parsing is not remote-login evidence. If these mutation tools are absent in this chat, reconnect the plugin; the read-only CLI fallbacks cannot perform key generation or lifecycle mutations.
 
 1. Refresh connection details after each start. A running status does not prove SSH is ready; verify connectivity with a harmless command and bounded retries.
 2. Use a login shell on the remote instance so its Python/Conda environment is available. Do not assume the exact image-specific environment without checking it.

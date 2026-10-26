@@ -258,7 +258,7 @@ test('transport blocks unknown origins, paths and methods before credential tran
   assert.equal(calls, 0);
 });
 
-test('MCP official client discovers eleven tools with the manifest version and performs harmless calls', { timeout: 20000 }, async () => {
+test('MCP official client discovers fourteen tools with the manifest version and performs harmless calls', { timeout: 20000 }, async () => {
   const manifest = JSON.parse(await readFile(path.join(plugin, '.codex-plugin/plugin.json'), 'utf8'));
   const mcp = JSON.parse(await readFile(path.join(plugin, manifest.mcpServers), 'utf8'));
   const runtime = mcp.mcpServers['autodl-direct'];
@@ -274,7 +274,10 @@ test('MCP official client discovers eleven tools with the manifest version and p
     await protocol.connect(transport);
     assert.equal(protocol.getServerVersion().version, manifest.version);
     const { tools } = await protocol.listTools();
-    assert.equal(tools.length, 11);
+    assert.equal(tools.length, 14);
+    assert.equal(tools.find(x => x.name === 'autodl_pro_catalog').annotations.readOnlyHint, true);
+    const keyPreview = parseResult(await protocol.callTool({name:'autodl_prepare_ssh_key',arguments:{key_name:'mcp-fixture'}}));
+    assert.equal(keyPreview.executed,false);
     assert.equal(tools.find(x => x.name === 'autodl_list_public_data').annotations.readOnlyHint, true);
     assert.ok(tools.find(x => x.name === 'autodl_balance').annotations.readOnlyHint);
     assert.equal(tools.find(x => x.name === 'autodl_balance').annotations.openWorldHint, true);

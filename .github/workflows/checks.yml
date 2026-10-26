@@ -24,7 +24,7 @@ jobs:
       - name: Build bundled runtime
         run: node plugins/autodl-direct/tooling/build.mjs
       - name: Run offline contract and MCP checks
-        run: node --test plugins/autodl-direct/tooling/verify.test.mjs plugins/autodl-direct/tooling/instances.test.mjs plugins/autodl-direct/tooling/public-data.test.mjs
+        run: node --test plugins/autodl-direct/tooling/*.test.mjs
       - name: Parse PowerShell scripts
         shell: pwsh
         run: |

@@ -297,10 +297,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path2) {
-  if (!path2)
+function getElementAtPath(obj, path3) {
+  if (!path3)
     return obj;
-  return path2.reduce((acc, key) => acc?.[key], obj);
+  return path3.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -640,11 +640,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path2, issues) {
+function prefixIssues(path3, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path2);
+    iss.path.unshift(path3);
     return iss;
   });
 }
@@ -1093,16 +1093,16 @@ function flattenError(error2, mapper = (issue2) => issue2.message) {
 }
 function formatError(error2, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error3, path2 = []) => {
+  const processError = (error3, path3 = []) => {
     for (const issue2 of error3.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path2, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path3, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path2, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path3, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path2, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path3, ...issue2.path]);
       } else {
-        const fullpath = [...path2, ...issue2.path];
+        const fullpath = [...path3, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -10438,9 +10438,9 @@ var rev2026Codec = {
     });
     const parsed = buildSchemas2026().RequestMetaEnvelopeSchema.safeParse(meta2);
     if (!parsed.success) for (const issue2 of parsed.error.issues) {
-      const path2 = issue2.path.map(String);
-      const key = path2.length > 0 ? path2.join(".") : "_meta";
-      if (path2.length === 1 && issues.some((existing) => existing.key === key && existing.problem === "missing")) continue;
+      const path3 = issue2.path.map(String);
+      const key = path3.length > 0 ? path3.join(".") : "_meta";
+      if (path3.length === 1 && issues.some((existing) => existing.key === key && existing.problem === "missing")) continue;
       issues.push({
         key,
         problem: issue2.message
@@ -10745,29 +10745,29 @@ var PERMITTED_X_MCP_HEADER_TYPES = /* @__PURE__ */ new Set([
 function scanXMcpHeaderDeclarations(inputSchema) {
   const declarations = [];
   const seenLower = /* @__PURE__ */ new Map();
-  const visit = (node2, path2, reachable) => {
+  const visit = (node2, path3, reachable) => {
     if (node2 === null || typeof node2 !== "object") return void 0;
     const schema = node2;
     if (X_MCP_HEADER_KEY in schema) {
-      if (!reachable || path2.length === 0) return `${pathName(path2)}: x-mcp-header is only permitted on properties statically reachable via a chain of 'properties' keys (not under items, additionalProperties, oneOf/anyOf/allOf/not, if/then/else, or $ref)`;
+      if (!reachable || path3.length === 0) return `${pathName(path3)}: x-mcp-header is only permitted on properties statically reachable via a chain of 'properties' keys (not under items, additionalProperties, oneOf/anyOf/allOf/not, if/then/else, or $ref)`;
       const raw = schema[X_MCP_HEADER_KEY];
-      if (typeof raw !== "string" || raw.length === 0) return `${pathName(path2)}: x-mcp-header MUST be a non-empty string`;
-      if (!RFC9110_TOKEN.test(raw)) return `${pathName(path2)}: x-mcp-header '${raw}' is not a valid RFC 9110 token (no spaces, control characters or HTTP delimiters)`;
+      if (typeof raw !== "string" || raw.length === 0) return `${pathName(path3)}: x-mcp-header MUST be a non-empty string`;
+      if (!RFC9110_TOKEN.test(raw)) return `${pathName(path3)}: x-mcp-header '${raw}' is not a valid RFC 9110 token (no spaces, control characters or HTTP delimiters)`;
       const type = typeof schema.type === "string" ? schema.type : void 0;
-      if (type === void 0 || !PERMITTED_X_MCP_HEADER_TYPES.has(type)) return `${pathName(path2)}: x-mcp-header is only permitted on primitive-typed properties (string, integer, boolean); got ${type ?? "<none>"}`;
+      if (type === void 0 || !PERMITTED_X_MCP_HEADER_TYPES.has(type)) return `${pathName(path3)}: x-mcp-header is only permitted on primitive-typed properties (string, integer, boolean); got ${type ?? "<none>"}`;
       const lower = raw.toLowerCase();
       const prior = seenLower.get(lower);
       if (prior !== void 0) return `x-mcp-header '${raw}' is not case-insensitively unique (also declared as '${prior}')`;
       seenLower.set(lower, raw);
       declarations.push({
-        path: path2,
+        path: path3,
         headerName: raw,
         type
       });
     }
     const properties = schema.properties;
     if (properties !== null && typeof properties === "object") for (const [key, child] of Object.entries(properties)) {
-      const fault$1 = visit(child, [...path2, key], reachable);
+      const fault$1 = visit(child, [...path3, key], reachable);
       if (fault$1 !== void 0) return fault$1;
     }
     for (const k of NON_REACHABLE_SUBSCHEMA_KEYWORDS) {
@@ -10775,7 +10775,7 @@ function scanXMcpHeaderDeclarations(inputSchema) {
       if (sub === void 0) continue;
       const branches = Array.isArray(sub) ? sub : sub !== null && typeof sub === "object" && OBJECT_VALUED_SUBSCHEMA_KEYWORDS.has(k) ? Object.values(sub) : [sub];
       for (const branch of branches) {
-        const fault$1 = visit(branch, [...path2, `<${k}>`], false);
+        const fault$1 = visit(branch, [...path3, `<${k}>`], false);
         if (fault$1 !== void 0) return fault$1;
       }
     }
@@ -10815,8 +10815,8 @@ var OBJECT_VALUED_SUBSCHEMA_KEYWORDS = /* @__PURE__ */ new Set([
   "$defs",
   "definitions"
 ]);
-function pathName(path2) {
-  return path2.length === 0 ? "<root>" : path2.join(".");
+function pathName(path3) {
+  return path3.length === 0 ? "<root>" : path3.join(".");
 }
 var HEADER_MISMATCH_ERROR_CODE = -32020;
 var INBOUND_VALIDATION_LADDER = [
@@ -11066,7 +11066,7 @@ var PROPERTY_KEYS_BY_TYPE = {
   array: shapeKeys([UntitledMultiSelectEnumSchemaSchema, TitledMultiSelectEnumSchemaSchema])
 };
 var SUPPORTED_STRING_FORMATS = new Set(StringSchemaSchema.shape.format.unwrap().options);
-function walkProperty(node2, path2, vendor, unsupported) {
+function walkProperty(node2, path3, vendor, unsupported) {
   if (!isJsonObject(node2)) return node2;
   const allowedKeys = typeof node2.type === "string" && Object.hasOwn(PROPERTY_KEYS_BY_TYPE, node2.type) ? PROPERTY_KEYS_BY_TYPE[node2.type] : void 0;
   if (allowedKeys === void 0) return node2;
@@ -11074,8 +11074,8 @@ function walkProperty(node2, path2, vendor, unsupported) {
   for (const [key, value] of Object.entries(node2)) if (allowedKeys.has(key) || isAnnotationOnlyJsonSchemaKeyword(key)) pruned[key] = value;
   else if (key === "pattern" && node2.type === "string" && typeof node2.format === "string") {
     if (!SUPPORTED_STRING_FORMATS.has(node2.format)) pruned[key] = value;
-    else if (typeof value !== "string" || !isLibraryFormatPattern(node2.format, value, vendor)) unsupported.push(`${path2}.${key}`);
-  } else unsupported.push(`${path2}.${key}`);
+    else if (typeof value !== "string" || !isLibraryFormatPattern(node2.format, value, vendor)) unsupported.push(`${path3}.${key}`);
+  } else unsupported.push(`${path3}.${key}`);
   return pruned;
 }
 function walkRequestedSchema(converted, vendor) {
@@ -11092,11 +11092,11 @@ function describeUnsupportedProperties(pruned, fallback) {
   const offenders = Object.entries(pruned.properties).filter(([, node2]) => !parseSchema(PrimitiveSchemaDefinitionSchema, node2).success).map(([name]) => `properties.${name}`);
   return offenders.length > 0 ? offenders.join(", ") : fallback;
 }
-function findDroppedConstraintPaths(original, parsed, path2 = "") {
-  if (Array.isArray(original) && Array.isArray(parsed)) return original.flatMap((item, index) => findDroppedConstraintPaths(item, parsed[index], `${path2}[${index}]`));
+function findDroppedConstraintPaths(original, parsed, path3 = "") {
+  if (Array.isArray(original) && Array.isArray(parsed)) return original.flatMap((item, index) => findDroppedConstraintPaths(item, parsed[index], `${path3}[${index}]`));
   if (!isJsonObject(original) || !isJsonObject(parsed)) return [];
   return Object.entries(original).flatMap(([key, value]) => {
-    const childPath = path2 ? `${path2}.${key}` : key;
+    const childPath = path3 ? `${path3}.${key}` : key;
     if (!Object.prototype.hasOwnProperty.call(parsed, key)) return isAnnotationOnlyJsonSchemaKeyword(key) ? [] : [childPath];
     return findDroppedConstraintPaths(value, parsed[key], childPath);
   });
@@ -15173,8 +15173,8 @@ var require_utils = /* @__PURE__ */ __commonJSMin(((exports, module) => {
     for (let i = 0; i < str.length; i++) if (str[i] === token) ind++;
     return ind;
   }
-  function removeDotSegments(path2) {
-    let input = path2;
+  function removeDotSegments(path3) {
+    let input = path3;
     const output = [];
     let nextSlash = -1;
     let len = 0;
@@ -15327,8 +15327,8 @@ var require_schemes = /* @__PURE__ */ __commonJSMin(((exports, module) => {
       wsComponent.secure = void 0;
     }
     if (wsComponent.resourceName) {
-      const [path2, query] = wsComponent.resourceName.split("?");
-      wsComponent.path = path2 && path2 !== "/" ? path2 : void 0;
+      const [path3, query] = wsComponent.resourceName.split("?");
+      wsComponent.path = path3 && path3 !== "/" ? path3 : void 0;
       wsComponent.query = query;
       wsComponent.resourceName = void 0;
     }
@@ -15381,7 +15381,7 @@ var require_schemes = /* @__PURE__ */ __commonJSMin(((exports, module) => {
     parse: httpParse,
     serialize: httpSerialize
   };
-  const https3 = {
+  const https4 = {
     scheme: "https",
     domainHost: http.domainHost,
     parse: httpParse,
@@ -15413,7 +15413,7 @@ var require_schemes = /* @__PURE__ */ __commonJSMin(((exports, module) => {
   };
   const SCHEMES = {
     http,
-    https: https3,
+    https: https4,
     ws,
     wss,
     urn,
@@ -16010,7 +16010,7 @@ var require_core$3 = /* @__PURE__ */ __commonJSMin(((exports) => {
     }
     errorsText(errors = this.errors, { separator = ", ", dataVar = "data" } = {}) {
       if (!errors || errors.length === 0) return "No errors";
-      return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text, msg) => text + separator + msg);
+      return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text2, msg) => text2 + separator + msg);
     }
     $dataMetaSchema(metaSchema, keywordsJsonPointers) {
       const rules = this.RULES.all;
@@ -21378,15 +21378,338 @@ var PublicDataClient = class {
   }
 };
 
+// src/pro-catalog.mjs
+import https3 from "node:https";
+var PRO_CATALOG_ORIGIN = "https://www.autodl.com";
+var PRO_CATALOG_PATHS = Object.freeze({ types: "/api/v1/machine_pro/gpu_type", specs: "/api/v1/machine_pro/gpu_spec_config" });
+function parameters2(input = {}) {
+  if (!input || Array.isArray(input) || typeof input !== "object" || Object.keys(input).some((k) => !["gpu_name", "data_center_list"].includes(k)))
+    throw new SafeError("INPUT", "\u53EA\u63A5\u53D7 gpu_name \u548C data_center_list\u3002");
+  const { gpu_name, data_center_list = ["westDC3", "beijingDC2"] } = input;
+  if (gpu_name !== void 0 && (typeof gpu_name !== "string" || !gpu_name.trim() || gpu_name.length > 100 || /[\u0000-\u001f\u007f]/u.test(gpu_name)) || !Array.isArray(data_center_list) || !data_center_list.length || data_center_list.length > 20 || data_center_list.some((x) => typeof x !== "string" || !/^[A-Za-z0-9-]{1,80}$/.test(x)) || new Set(data_center_list).size !== data_center_list.length)
+    throw new SafeError("INPUT", "GPU \u540D\u79F0\u6700\u957F100\u5B57\u7B26\uFF1B\u5730\u533A\u987B\u4E3A1\u81F320\u4E2A\u4E0D\u540C\u7684\u5408\u6CD5\u6807\u8BC6\u3002");
+  return { ...gpu_name === void 0 ? {} : { gpu_name: gpu_name.trim() }, data_center_list };
+}
+function requestProCatalog(kind, body, requestImpl = https3.request) {
+  if (!Object.hasOwn(PRO_CATALOG_PATHS, kind)) return Promise.reject(new SafeError("INPUT", "\u4E0D\u652F\u6301\u7684\u53EA\u8BFB\u89C4\u683C\u63A5\u53E3\u3002"));
+  if (!body || typeof body !== "object" || Array.isArray(body) || (kind === "types" ? Object.keys(body).join() !== "data_center_list" : Object.keys(body).sort().join() !== "charge_type,gpu_name" || body.charge_type !== "payg" || typeof body.gpu_name !== "string"))
+    return Promise.reject(new SafeError("INPUT", "\u89C4\u683C\u63A5\u53E3\u53C2\u6570\u4E0D\u5408\u6CD5\u3002"));
+  try {
+    parameters2(kind === "types" ? body : { gpu_name: body.gpu_name });
+  } catch (error2) {
+    return Promise.reject(error2);
+  }
+  const payload = JSON.stringify(body);
+  return new Promise((resolve, reject) => {
+    let req, timer, settled = false;
+    const fail = (error2) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(error2);
+      req?.destroy();
+    };
+    req = requestImpl(new URL(PRO_CATALOG_PATHS[kind], PRO_CATALOG_ORIGIN), {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload) }
+    }, (res) => {
+      let size = 0;
+      const chunks = [];
+      res.on("data", (chunk) => {
+        size += chunk.length;
+        if (size > 2 * 1024 * 1024) fail(new SafeError("RESPONSE_TOO_LARGE", "\u89C4\u683C\u54CD\u5E94\u8D85\u8FC72 MiB\u3002"));
+        else chunks.push(chunk);
+      });
+      res.on("aborted", () => fail(new SafeError("NETWORK", "\u89C4\u683C\u54CD\u5E94\u4E2D\u65AD\u3002")));
+      res.on("error", () => fail(new SafeError("NETWORK", "\u89C4\u683C\u54CD\u5E94\u8BFB\u53D6\u5931\u8D25\u3002")));
+      res.on("end", () => {
+        if (settled) return;
+        if (res.statusCode >= 300 && res.statusCode < 400) return fail(new SafeError("REDIRECT_BLOCKED", "\u89C4\u683C\u63A5\u53E3\u91CD\u5B9A\u5411\uFF1B\u672A\u8DDF\u968F\u3002"));
+        if (res.statusCode < 200 || res.statusCode >= 300) return fail(new SafeError("HTTP_ERROR", `\u89C4\u683C\u67E5\u8BE2\u5931\u8D25\uFF08HTTP ${res.statusCode}\uFF09\u3002`));
+        let value;
+        try {
+          value = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+        } catch {
+          return fail(new SafeError("INVALID_RESPONSE", "\u89C4\u683C\u63A5\u53E3\u672A\u8FD4\u56DEJSON\u3002"));
+        }
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      });
+    });
+    timer = setTimeout(() => fail(new SafeError("TIMEOUT", "\u89C4\u683C\u67E5\u8BE2\u8D85\u65F6\u3002")), 2e4);
+    timer.unref?.();
+    req.setTimeout(2e4, () => fail(new SafeError("TIMEOUT", "\u89C4\u683C\u67E5\u8BE2\u8D85\u65F6\u3002")));
+    req.on("error", () => fail(new SafeError("NETWORK", "\u65E0\u6CD5\u8FDE\u63A5\u89C4\u683C\u63A5\u53E3\u3002")));
+    req.end(payload);
+  });
+}
+function rows(response) {
+  if (response?.code !== "Success") throw new SafeError(
+    "PRO_CATALOG_API",
+    "\u89C4\u683C\u67E5\u8BE2\u672A\u6210\u529F\uFF1B\u4E0D\u4F1A\u53D1\u9001 Token \u6216 Cookie \u91CD\u8BD5\u3002",
+    response?.request_id,
+    { response_code: String(response?.code ?? "missing").slice(0, 100) }
+  );
+  if (!Array.isArray(response.data) || response.data.length > 1e3) throw new SafeError("RESPONSE_SCHEMA", "\u89C4\u683C\u5217\u8868\u7ED3\u6784\u5DF2\u53D8\u5316\uFF0C\u4E0D\u80FD\u89C6\u4E3A\u7A7A\u5E93\u5B58\u3002", response.request_id);
+  return response.data;
+}
+var integer2 = (x, min = 0) => Number.isSafeInteger(x) && x >= min;
+var text = (x) => typeof x === "string" && x.trim() && x.length <= 100 && !/[\u0000-\u001f\u007f]/u.test(x);
+var badSchema = () => {
+  throw new SafeError("RESPONSE_SCHEMA", "GPU \u89C4\u683C\u6216\u4EF7\u683C\u5B57\u6BB5\u5DF2\u53D8\u5316\uFF0C\u4E0D\u80FD\u4F30\u7B97\u8D39\u7528\u3002");
+};
+var ProCatalogClient = class {
+  constructor({ transport = requestProCatalog } = {}) {
+    this.transport = transport;
+  }
+  async list(input = {}) {
+    const query = parameters2(input);
+    const typesResponse = redact(await this.transport("types", { data_center_list: query.data_center_list }));
+    const seen = /* @__PURE__ */ new Set();
+    const types = rows(typesResponse).map((row) => {
+      if (!text(row.gpu_type) || !integer2(row.gpu_idle_num) || !integer2(row.gpu_total_number) || row.gpu_idle_num > row.gpu_total_number || seen.has(row.gpu_type)) badSchema();
+      seen.add(row.gpu_type);
+      return { gpu_name: row.gpu_type, idle_gpu_count: row.gpu_idle_num, total_gpu_count: row.gpu_total_number };
+    });
+    let specs, specResponse;
+    if (query.gpu_name !== void 0) {
+      if (!seen.has(query.gpu_name)) throw new SafeError("GPU_NOT_LISTED", "GPU \u540D\u79F0\u4E0D\u5728\u6240\u9009\u5730\u533A\u5F53\u524D\u76EE\u5F55\u4E2D\uFF1B\u5148\u7701\u7565 gpu_name \u67E5\u8BE2\u53EF\u7528\u540D\u79F0\u3002");
+      specResponse = redact(await this.transport("specs", { gpu_name: query.gpu_name, charge_type: "payg" }));
+      const ids = /* @__PURE__ */ new Set();
+      specs = rows(specResponse).map((row) => {
+        const sku = row.gpu_spec_config_sku_info?.find((x) => x.type === "payg");
+        if (!integer2(row.id, 1) || !/^[A-Za-z0-9-]{1,100}$/.test(row.uuid ?? "") || ids.has(row.uuid) || row.gpu_name !== query.gpu_name || !text(row.name) || !text(row.gpu_spec_name) || !integer2(row.cpu_num_from, 1) || !integer2(row.cpu_num_to, row.cpu_num_from) || !integer2(row.memory_size_from, 1) || !integer2(row.memory_size_to, row.memory_size_from) || !integer2(sku?.current_price, 1) || !Array.isArray(sku.level_config)) badSchema();
+        ids.add(row.uuid);
+        const levels = sku.level_config.map((level) => {
+          if (!text(level.level_name) || !integer2(level.discounted_price, 1)) badSchema();
+          return { level: level.level_name, yuan_per_gpu_hour: level.discounted_price / 1e3 };
+        });
+        return {
+          gpu_spec_uuid: row.uuid,
+          spec_id: row.id,
+          name: row.name,
+          gpu_name: row.gpu_name,
+          spec_name: row.gpu_spec_name,
+          vcpu_range: [row.cpu_num_from, row.cpu_num_to],
+          host_memory_gib_range: [row.memory_size_from / 2 ** 30, row.memory_size_to / 2 ** 30],
+          list_yuan_per_gpu_hour: sku.current_price / 1e3,
+          published_level_prices: levels,
+          price_scope: "GPU only; account level, coupon and disk charges not resolved"
+        };
+      });
+    }
+    return {
+      source: "official_pro_console_catalog",
+      authentication: "none; no Token or Cookie sent",
+      api_origin: PRO_CATALOG_ORIGIN,
+      api_paths: PRO_CATALOG_PATHS,
+      observed_at: (/* @__PURE__ */ new Date()).toISOString(),
+      data_center_list: query.data_center_list,
+      gpu_types: types,
+      ...specs === void 0 ? {} : { specs },
+      request_ids: [typesResponse.request_id, ...specResponse ? [specResponse.request_id] : []],
+      account_final_quote: "unavailable_without_web_session",
+      notes: [
+        "\u6765\u81EA\u5B98\u7F51\u672A\u627F\u8BFA\u7A33\u5B9A\u7684\u63A7\u5236\u53F0\u53EA\u8BFB\u63A5\u53E3\uFF1B\u5E93\u5B58\u4E3A\u5730\u533A\u805A\u5408\u5FEB\u7167\uFF0C\u4E0D\u4FDD\u8BC1\u521B\u5EFA\u6210\u529F\u3002",
+        "\u4EF7\u683C\u5355\u4F4D\u4E3A\u4EBA\u6C11\u5E01\u5143/\u5361/\u5C0F\u65F6\u3002\u4E3B\u673A\u5185\u5B58\u4E0D\u662FGPU\u663E\u5B58\uFF1B\u76EE\u5F55\u672A\u63D0\u4F9BGPU\u663E\u5B58\u5B57\u6BB5\u3002",
+        "\u8BA2\u5355\u4EF7\u683C\u9884\u89C8\u8981\u6C42\u7F51\u9875\u767B\u5F55\uFF1B\u6807\u4EF7\u548C\u5404\u7B49\u7EA7\u516C\u5F00\u4EF7\u4E0D\u662F\u8D26\u6237\u6700\u7EC8\u603B\u4EF7\uFF0C\u4E0D\u542B\u672A\u6838\u5B9E\u78C1\u76D8\u6536\u8D39\u3002"
+      ]
+    };
+  }
+};
+
+// src/ssh.mjs
+import { execFile as execFile2 } from "node:child_process";
+import { promisify as promisify2 } from "node:util";
+import { homedir } from "node:os";
+import path2 from "node:path";
+import { mkdir, lstat, open as open2, readFile, writeFile, rename, unlink, chmod } from "node:fs/promises";
+import { createHash } from "node:crypto";
+var exec = promisify2(execFile2);
+var marker = "# Managed by AutoDL Direct; dedicated config, no user config edits.\n";
+function validatePublicKey(value) {
+  if (typeof value !== "string" || value.length > 256 || !/^ssh-ed25519 [A-Za-z0-9+/]+={0,2}$/.test(value))
+    throw new SafeError("INPUT", "\u53EA\u63A5\u53D7\u4E0D\u542B\u6CE8\u91CA\u6216\u6362\u884C\u7684 Ed25519 \u516C\u94A5\uFF1B\u4E0D\u8981\u63D0\u4F9B\u79C1\u94A5\u3002");
+  const encoded = value.split(" ")[1], blob = Buffer.from(encoded, "base64");
+  if (blob.toString("base64") !== encoded || blob.length !== 51 || blob.readUInt32BE(0) !== 11 || blob.subarray(4, 15).toString() !== "ssh-ed25519" || blob.readUInt32BE(15) !== 32)
+    throw new SafeError("INPUT", "Ed25519 \u516C\u94A5\u7F16\u7801\u65E0\u6548\u3002");
+  return value;
+}
+function sshBootstrap(publicKey2, startCommand) {
+  if (publicKey2 === void 0) return startCommand;
+  validatePublicKey(publicKey2);
+  const setup = `install -d -m 700 /root/.ssh && touch /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys && (grep -qxF '${publicKey2}' /root/.ssh/authorized_keys || printf '\\n%s\\n' '${publicKey2}' >> /root/.ssh/authorized_keys)`;
+  const result = startCommand ? `${setup} && (
+${startCommand}
+)` : setup;
+  if (result.length > 16384) throw new SafeError("INPUT", "\u516C\u94A5\u5B89\u88C5\u4E0E\u5F00\u673A\u547D\u4EE4\u5408\u8BA1\u8D85\u8FC716384\u5B57\u7B26\u3002");
+  return result;
+}
+function keyName(value) {
+  if (typeof value !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(value) || /^(con|prn|aux|nul|com[0-9]|lpt[0-9])$/i.test(value))
+    throw new SafeError("INPUT", "\u5BC6\u94A5\u540D\u53EA\u63A5\u53D71\u81F364\u4F4D\u5B57\u6BCD\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u548C\u8FDE\u5B57\u7B26\uFF0C\u4E0D\u80FD\u4F7F\u7528\u7CFB\u7EDF\u8BBE\u5907\u540D\u3002");
+  return value;
+}
+async function stat(file) {
+  try {
+    const info = await lstat(file);
+    if (info.isSymbolicLink()) throw new SafeError("SSH_PATH", "SSH \u8DEF\u5F84\u4E0D\u80FD\u662F\u7B26\u53F7\u94FE\u63A5\u3002");
+    return info;
+  } catch (error2) {
+    if (error2.code === "ENOENT") return null;
+    throw error2;
+  }
+}
+var SshManager = class {
+  constructor({ root = path2.join(homedir(), ".ssh", "autodl-direct"), run = exec } = {}) {
+    if (!path2.isAbsolute(root) || /[\r\n\u0000]/.test(root)) throw new SafeError("SSH_PATH", "SSH \u76EE\u5F55\u987B\u4E3A\u7EDD\u5BF9\u8DEF\u5F84\u3002");
+    this.root = path2.resolve(root);
+    this.run = run;
+  }
+  paths(name) {
+    keyName(name);
+    return { privateKey: path2.join(this.root, name), publicKey: path2.join(this.root, `${name}.pub`) };
+  }
+  async checkRoot(create = false) {
+    const parents = [];
+    let current = this.root;
+    while (path2.dirname(current) !== current) {
+      parents.unshift(current);
+      current = path2.dirname(current);
+    }
+    for (const dir of parents) {
+      const info = await stat(dir);
+      if (info && !info.isDirectory()) throw new SafeError("SSH_PATH", "SSH \u76EE\u5F55\u8DEF\u5F84\u88AB\u6587\u4EF6\u5360\u7528\u3002");
+    }
+    if (create) {
+      await mkdir(this.root, { recursive: true, mode: 448 });
+      if (process.platform !== "win32") await chmod(this.root, 448);
+    }
+  }
+  async key(name, execute2 = false) {
+    const files = this.paths(name);
+    if (!execute2) return { executed: false, preview: { action: "generate_or_reuse_dedicated_ed25519", key_name: name, ...files }, note: "\u6267\u884C\u540E\u521B\u5EFA\u672C\u673A\u4E13\u7528\u65E0\u53E3\u4EE4\u5BC6\u94A5\uFF1B\u5DF2\u6709\u5BC6\u94A5\u4E0D\u4F1A\u8986\u76D6\uFF0C\u79C1\u94A5\u4E0D\u8FD4\u56DE\u3001\u4E0D\u4E0A\u4F20\u3002" };
+    await this.checkRoot(true);
+    const lockPath = path2.join(this.root, `${name}.lock`);
+    let lock;
+    try {
+      lock = await open2(lockPath, "wx", 384);
+    } catch {
+      throw new SafeError("SSH_LOCK", "\u5BC6\u94A5\u6B63\u7531\u5176\u4ED6\u64CD\u4F5C\u4F7F\u7528\uFF1B\u8BF7\u68C0\u67E5\u540E\u91CD\u8BD5\u3002");
+    }
+    try {
+      const privateInfo = await stat(files.privateKey), publicInfo = await stat(files.publicKey);
+      if (privateInfo && !privateInfo.isFile() || publicInfo && !publicInfo.isFile() || Boolean(privateInfo) !== Boolean(publicInfo))
+        throw new SafeError("SSH_KEY_INCOMPLETE", "\u5BC6\u94A5\u6587\u4EF6\u4E0D\u5B8C\u6574\u6216\u7C7B\u578B\u9519\u8BEF\uFF1B\u4E0D\u4F1A\u8986\u76D6\u6216\u5220\u9664\u73B0\u6709\u6587\u4EF6\u3002");
+      let created = false;
+      if (!privateInfo) {
+        try {
+          await this.run("ssh-keygen", ["-q", "-t", "ed25519", "-N", "", "-C", "autodl-direct", "-f", files.privateKey], { windowsHide: true, timeout: 2e4, maxBuffer: 16384 });
+        } catch {
+          throw new SafeError("SSH_KEYGEN", "\u7CFB\u7EDF ssh-keygen \u672A\u5B8C\u6210\uFF1B\u68C0\u67E5 OpenSSH \u4E0E\u672C\u673A\u6587\u4EF6\u6743\u9650\u3002");
+        }
+        created = true;
+      }
+      const publicKey2 = await this.publicKey(name);
+      let derived2;
+      try {
+        derived2 = await this.run("ssh-keygen", ["-y", "-P", "", "-f", files.privateKey], { windowsHide: true, timeout: 1e4, maxBuffer: 16384 });
+      } catch {
+        throw new SafeError("SSH_KEY_INVALID", "\u4E0D\u80FD\u9A8C\u8BC1\u4E13\u7528\u5BC6\u94A5\uFF1B\u4E0D\u4F1A\u8BFB\u53D6\u6216\u8FD4\u56DE\u79C1\u94A5\u5185\u5BB9\u3002");
+      }
+      if (derived2.stdout.trim().split(/\s+/).slice(0, 2).join(" ") !== publicKey2) throw new SafeError("SSH_KEY_MISMATCH", "\u516C\u94A5\u4E0E\u79C1\u94A5\u4E0D\u5339\u914D\uFF0C\u62D2\u7EDD\u4F7F\u7528\u3002");
+      return {
+        executed: true,
+        created,
+        key_name: name,
+        ...files,
+        ssh_public_key: publicKey2,
+        fingerprint: "SHA256:" + createHash("sha256").update(Buffer.from(publicKey2.split(" ")[1], "base64")).digest("base64").replace(/=+$/, ""),
+        remote_authorized: false,
+        login: "not_verified",
+        note: "\u628A ssh_public_key \u4F20\u5165\u521B\u5EFA/\u5F00\u673A\u5DE5\u5177\uFF1B\u5B89\u88C5\u516C\u94A5\u9700\u8981\u6267\u884C\u5F00\u673A\u547D\u4EE4\u3002\u79C1\u94A5\u53EA\u7559\u5728\u672C\u673A\u3002"
+      };
+    } finally {
+      await lock.close();
+      await unlink(lockPath);
+    }
+  }
+  async publicKey(name) {
+    await this.checkRoot();
+    const files = this.paths(name);
+    const info = await stat(files.publicKey);
+    if (!info?.isFile() || info.size > 4096) throw new SafeError("SSH_KEY_MISSING", "\u7F3A\u5C11\u5408\u6CD5\u4E13\u7528\u516C\u94A5\uFF1B\u5148\u6267\u884C autodl_prepare_ssh_key\u3002");
+    const value = (await readFile(files.publicKey, "utf8")).trim().split(/\s+/).slice(0, 2).join(" ");
+    return validatePublicKey(value);
+  }
+  async connection(instance, name, connection, execute2 = false) {
+    if (!/^pro-[A-Za-z0-9-]{1,80}$/.test(instance)) throw new SafeError("INPUT", "\u9700\u8981\u5408\u6CD5 Pro \u5B9E\u4F8B ID\u3002");
+    const files = this.paths(name);
+    if (!connection?.available || !/^[A-Za-z0-9][A-Za-z0-9.-]*$/.test(connection.host ?? "") || !Number.isInteger(connection.port) || connection.port < 1 || connection.port > 65535 || !/^[A-Za-z0-9_-]+$/.test(connection.username ?? ""))
+      throw new SafeError("SSH_CONNECTION", "\u8BE6\u60C5\u6CA1\u6709\u7ECF\u8FC7\u6821\u9A8C\u7684 SSH \u8FDE\u63A5\u5730\u5740\u3002");
+    if (connection.username !== "root") throw new SafeError("SSH_CONNECTION", "\u516C\u94A5\u5B89\u88C5\u8DEF\u5F84\u53EA\u9002\u7528\u4E8E root\uFF0C\u5176\u4ED6\u7528\u6237\u9700\u8981\u5DF2\u6709\u6388\u6743\u914D\u7F6E\u3002");
+    const configFile = path2.join(this.root, `${instance}.conf`);
+    const escapedKey = files.privateKey.replaceAll("\\", "/").replaceAll("%", "%%").replaceAll('"', '\\"');
+    const config2 = marker + `Host ${instance}
+  HostName ${connection.host}
+  Port ${connection.port}
+  User ${connection.username}
+  IdentityFile "${escapedKey}"
+  IdentitiesOnly yes
+  StrictHostKeyChecking ask
+  ForwardAgent no
+`;
+    const result = {
+      executed: execute2,
+      config_path: configFile,
+      config: config2,
+      ssh_argv: ["ssh", "-F", configFile, instance],
+      scp_argv: ["scp", "-F", configFile],
+      sftp_argv: ["sftp", "-F", configFile, instance],
+      authentication: "public_key_installation_not_verified",
+      host_verification: "required; existing known_hosts retained",
+      login: "not_verified",
+      note: "\u72EC\u7ACB\u914D\u7F6E\u4E0D\u4F1A\u4FEE\u6539\u7528\u6237\u4E3B\u914D\u7F6E\u3002\u9996\u6B21\u8FDE\u63A5\u987B\u6838\u9A8C\u4E3B\u673A\u6307\u7EB9\uFF1B\u5B9E\u9645 SSH \u767B\u5F55\u4ECD\u9700\u6267\u884C\u7CFB\u7EDF SSH \u9A8C\u8BC1\u3002"
+    };
+    if (!execute2) return result;
+    await this.publicKey(name);
+    const privateInfo = await stat(files.privateKey);
+    if (!privateInfo?.isFile()) throw new SafeError("SSH_KEY_MISSING", "\u7F3A\u5C11\u672C\u673A\u4E13\u7528\u79C1\u94A5\u3002");
+    const previous = await stat(configFile);
+    if (previous && (!previous.isFile() || previous.size > 16384 || !(await readFile(configFile, "utf8")).startsWith(marker)))
+      throw new SafeError("SSH_CONFIG_EXISTS", "\u540C\u540D\u914D\u7F6E\u4E0D\u5C5E\u4E8E\u63D2\u4EF6\uFF0C\u62D2\u7EDD\u8986\u76D6\u3002");
+    const temp = `${configFile}.${process.pid}.${Date.now()}.tmp`;
+    await writeFile(temp, config2, { flag: "wx", mode: 384 });
+    try {
+      await rename(temp, configFile);
+    } finally {
+      await unlink(temp).catch((error2) => {
+        if (error2.code !== "ENOENT") throw error2;
+      });
+    }
+    return result;
+  }
+};
+
 // src/tools.mjs
 var id = string2().regex(/^pro-[A-Za-z0-9-]{1,80}$/).describe("AutoDL Pro \u5B9E\u4F8B ID\uFF1B\u666E\u901A\u5B9E\u4F8B\u4E0D\u80FD\u7528\u4E8E\u6B64\u63A5\u53E3");
 var execute = boolean2().default(false).describe("false \u53EA\u9884\u89C8\uFF1Btrue \u6839\u636E\u7528\u6237\u5DF2\u6709\u6388\u6743\u6267\u884C\u771F\u5B9E\u64CD\u4F5C");
 var command = string2().max(16384).optional().describe("\u53EF\u9009\u7684\u5F00\u673A\u547D\u4EE4\u3002\u547D\u4EE4\u5931\u8D25\u4E0D\u4F1A\u81EA\u52A8\u5173\u673A\uFF1B\u4E0D\u8981\u5728\u6B64\u4F20\u5165\u51ED\u636E");
+var publicKey = string2().max(256).refine((value) => {
+  try {
+    validatePublicKey(value);
+    return true;
+  } catch {
+    return false;
+  }
+}, "\u9700\u8981\u4E0D\u542B\u6CE8\u91CA\u7684 Ed25519 \u516C\u94A5").optional().describe("\u672C\u673A\u4E13\u7528 Ed25519 \u516C\u94A5\uFF1B\u5F00\u673A\u547D\u4EE4\u5B89\u88C5\u5230 root \u7684 authorized_keys\uFF0C\u7981\u6B62\u63D0\u4F9B\u79C1\u94A5");
+var keyName2 = string2().regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/).refine((x) => !/^(con|prn|aux|nul|com[0-9]|lpt[0-9])$/i.test(x));
 var page = {
   page_index: number2().int().min(1).default(1),
   page_size: number2().int().min(1).max(100).default(20)
 };
-function createTools(client = new AutoDLClient(), env = process.env, publicDataClient = new PublicDataClient()) {
+function createTools(client = new AutoDLClient(), env = process.env, publicDataClient = new PublicDataClient(), proCatalogClient = new ProCatalogClient(), ssh = new SshManager()) {
   const read = (name, title, description, shape, run, openWorld = true) => ({
     name,
     title,
@@ -21458,6 +21781,29 @@ function createTools(client = new AutoDLClient(), env = process.env, publicDataC
     read("autodl_instance_status", "\u67E5\u8BE2\u5B9E\u4F8B\u72B6\u6001", "\u67E5\u8BE2 Pro \u5B9E\u4F8B\u72B6\u6001\uFF1B\u5931\u8D25\u65F6\u6709\u754C\u5206\u9875\u5217\u8868\u56DE\u9000\uFF0C\u6CE8\u660E\u6765\u6E90\u3001\u65F6\u95F4\u548C\u539F\u59CB request_id\u3002", { instance_uuid: id }, (input) => instanceStatus(client, input)),
     read("autodl_instance_info", "\u67E5\u8BE2\u5B9E\u4F8B\u8BE6\u60C5", "\u83B7\u53D6\u8BE6\u60C5\u53CA\u5B89\u5168\u4E3B\u673A\u3001\u7AEF\u53E3\u3001\u7528\u6237\u540D\u548C\u8BA4\u8BC1\u53EF\u7528\u6027\uFF1B\u672A\u9A8C\u8BC1 SSH \u767B\u5F55\u3002\u5BC6\u7801\u548C Token \u8131\u654F\uFF0C\u56DE\u9000\u5217\u8868\u4E0D\u731C\u8FDE\u63A5\u5730\u5740\u3002", { instance_uuid: id }, (input) => instanceInfo(client, input)),
     read("autodl_list_images", "\u5217\u51FA\u79C1\u6709\u955C\u50CF", "\u5206\u9875\u67E5\u8BE2 Pro \u79C1\u6709\u955C\u50CF\u4E0E\u4FDD\u5B58\u72B6\u6001\uFF1B\u516C\u5171\u955C\u50CF\u548C GPU \u89C4\u683C\u987B\u67E5\u5B98\u65B9\u6587\u6863\u3002", page, (input) => client.call("images", input)),
+    read("autodl_pro_catalog", "\u67E5\u8BE2 Pro \u5E93\u5B58\u4E0E\u6807\u4EF7", "\u65E0\u9700\u767B\u5F55\u67E5\u8BE2\u5730\u533A\u805A\u5408 GPU \u5E93\u5B58\uFF1B\u6307\u5B9A\u76EE\u5F55\u4E2D\u7684 gpu_name \u8FD4\u56DE\u89C4\u683C ID\u3001\u4E3B\u673A\u5185\u5B58\u548C\u4EBA\u6C11\u5E01/\u5361/\u5C0F\u65F6\u6807\u4EF7\u3002\u4E0D\u662F\u8D26\u6237\u6700\u7EC8\u8BA2\u5355\u62A5\u4EF7\uFF0C\u4E0D\u542B\u672A\u6838\u5B9E\u78C1\u76D8\u6536\u8D39\uFF1B\u4E0D\u53D1\u9001 Token \u6216 Cookie\u3002", {
+      gpu_name: string2().min(1).max(100).regex(/^[^\u0000-\u001f\u007f]*$/u).optional(),
+      data_center_list: array(string2().regex(/^[A-Za-z0-9-]{1,80}$/)).min(1).max(20).default(["westDC3", "beijingDC2"])
+    }, (input) => proCatalogClient.list(input)),
+    {
+      name: "autodl_prepare_ssh_key",
+      title: "\u51C6\u5907\u4E13\u7528 SSH \u5BC6\u94A5",
+      description: "\u9ED8\u8BA4\u9884\u89C8\uFF1Bexecute=true \u5728\u672C\u673A SSH \u5B50\u76EE\u5F55\u751F\u6210\u6216\u590D\u7528\u4E13\u7528\u65E0\u53E3\u4EE4 Ed25519 \u5BC6\u94A5\u3002\u53EA\u8FD4\u56DE\u516C\u94A5\u3001\u8DEF\u5F84\u4E0E\u6307\u7EB9\uFF0C\u79C1\u94A5\u4E0D\u8FD4\u56DE\u6216\u4E0A\u4F20\uFF0C\u4E0D\u8986\u76D6\u5DF2\u6709\u5BC6\u94A5\u3002",
+      schema: object({ key_name: keyName2, execute }).strict(),
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      run: (input) => ssh.key(input.key_name, input.execute)
+    },
+    {
+      name: "autodl_prepare_ssh_connection",
+      title: "\u51C6\u5907\u5B9E\u4F8B SSH \u914D\u7F6E",
+      description: "\u4ECE Pro \u8BE6\u60C5\u5237\u65B0\u8FDE\u63A5\u4FE1\u606F\uFF1B\u9ED8\u8BA4\u53EA\u9884\u89C8\u72EC\u7ACB\u914D\u7F6E\uFF0Cexecute=true \u5199\u5165\u672C\u673A\u4E13\u7528\u914D\u7F6E\u3002\u4FDD\u7559\u4E3B\u673A\u6307\u7EB9\u6838\u9A8C\uFF0C\u4E0D\u8BC1\u660E\u516C\u94A5\u5DF2\u5B89\u88C5\u6216 SSH \u767B\u5F55\u6210\u529F\u3002",
+      schema: object({ instance_uuid: id, key_name: keyName2, execute }).strict(),
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+      run: async (input) => {
+        const info = await instanceInfo(client, { instance_uuid: input.instance_uuid });
+        return { ...await ssh.connection(input.instance_uuid, input.key_name, info.connection, input.execute), connection_source: info.source, request_id: info.request_id, observed_at: info.observed_at };
+      }
+    },
     read("autodl_list_public_data", "\u67E5\u8BE2\u516C\u5171\u6570\u636E\u76EE\u5F55", "\u6309\u540D\u79F0\u641C\u7D22\u5E76\u5206\u9875\u67E5\u8BE2 AutoDL \u516C\u5171\u6570\u636E\u96C6\u548C\u6A21\u578B\u76EE\u5F55\uFF0C\u8FD4\u56DE\u6302\u8F7D\u8DEF\u5F84\u3001\u76EE\u5F55\u5927\u5C0F\u3001\u53D1\u5E03\u65B9\u53CA\u7B80\u4ECB\u3002\u4E0D\u9700\u8981Token\uFF0C\u4E0D\u53D1\u9001Token\u6216Cookie\uFF1B\u8DEF\u5F84\u4E0D\u4EE3\u8868\u76EE\u6807\u5B9E\u4F8B\u53EF\u8BBF\u95EE\u3002\u76EE\u5F55\u63A5\u53E3\u53D8\u5316\u65F6\u663E\u5F0F\u62A5\u9519\u3002", {
       keyword: string2().max(200).regex(/^[^\u0000-\u001f\u007f]*$/u).default(""),
       page_index: number2().int().min(1).max(1e4).default(1),
@@ -21471,12 +21817,20 @@ function createTools(client = new AutoDLClient(), env = process.env, publicDataC
       cuda_v_from: number2().int().min(100).max(999),
       data_center_list: array(string2().regex(/^[A-Za-z0-9-]{1,80}$/)).max(20).optional(),
       instance_name: string2().max(100).optional(),
-      start_command: command
-    }, "create", ({ execute: _execute, ...body }) => body),
+      start_command: command,
+      ssh_public_key: publicKey
+    }, "create", ({ execute: _execute, ssh_public_key, ...body }) => {
+      const start_command = sshBootstrap(ssh_public_key, body.start_command);
+      return { ...body, ...start_command === void 0 ? {} : { start_command } };
+    }),
     write("autodl_power_on", "\u5F00\u673A Pro \u5B9E\u4F8B", "\u4EE5 GPU \u6A21\u5F0F\u5F00\u673A\u5E76\u5F00\u59CB\u8BA1\u8D39\u3002\u9ED8\u8BA4\u53EA\u9884\u89C8\uFF1B\u5F00\u673A\u547D\u4EE4\u5931\u8D25\u4E0D\u4F1A\u81EA\u52A8\u5173\u673A\u3002", {
       instance_uuid: id,
-      start_command: command
-    }, "powerOn", ({ instance_uuid, start_command }) => ({ instance_uuid, payload: "gpu", ...start_command === void 0 ? {} : { start_command } })),
+      start_command: command,
+      ssh_public_key: publicKey
+    }, "powerOn", ({ instance_uuid, start_command, ssh_public_key }) => {
+      const combined = sshBootstrap(ssh_public_key, start_command);
+      return { instance_uuid, payload: "gpu", ...combined === void 0 ? {} : { start_command: combined } };
+    }),
     write("autodl_power_off", "\u5173\u673A Pro \u5B9E\u4F8B", "\u5173\u673A\u4EE5\u505C\u6B62 GPU \u8BA1\u8D39\uFF0C\u4F1A\u4E2D\u65AD\u8BAD\u7EC3\u6216\u670D\u52A1\u3002\u9ED8\u8BA4\u53EA\u9884\u89C8\uFF1B\u8C03\u7528\u540E\u987B\u68C0\u67E5\u72B6\u6001\u3002", {
       instance_uuid: id
     }, "powerOff", ({ instance_uuid }) => ({ instance_uuid }), true),
@@ -21502,14 +21856,14 @@ function errorResult(error2) {
 // .codex-plugin/plugin.json
 var plugin_default = {
   name: "autodl-direct",
-  version: "0.1.6",
+  version: "0.1.8",
   description: "\u672C\u5730\u81EA\u5EFA\u7684 AutoDL \u5B98\u65B9 API \u96C6\u6210\u3002",
   skills: "./skills/",
   mcpServers: "./.mcp.json",
   interface: {
     displayName: "AutoDL Direct",
     shortDescription: "\u76F4\u63A5\u7BA1\u7406 AutoDL GPU \u5B9E\u4F8B",
-    longDescription: "\u5728\u672C\u673A\u8FD0\u884C\uFF0C\u76F4\u63A5\u8BBF\u95EE AutoDL \u5B98\u65B9\u5F00\u53D1\u8005 API\u3002\u67E5\u8BE2\u4F59\u989D\u3001Pro \u5B9E\u4F8B\u548C\u955C\u50CF\uFF0C\u9884\u89C8\u6216\u6267\u884C\u521B\u5EFA\u3001\u5F00\u5173\u673A\u53CA\u4FDD\u5B58\u955C\u50CF\uFF1B\u901A\u8FC7 Skill \u914D\u5408\u7CFB\u7EDF SSH \u64CD\u4F5C\u5DF2\u6709\u5B9E\u4F8B\u3002\u7531\u672C\u5730\u5DE5\u4F5C\u533A\u81EA\u5EFA\uFF0C\u4E0E AutoDL \u5B98\u65B9\u65E0\u96B6\u5C5E\u5173\u7CFB\u3002",
+    longDescription: "\u5728\u672C\u673A\u8FD0\u884C\uFF0C\u76F4\u63A5\u8BBF\u95EE AutoDL \u5B98\u65B9\u5F00\u53D1\u8005 API\u3002\u67E5\u8BE2\u4F59\u989D\u3001Pro \u5B9E\u4F8B\u548C\u955C\u50CF\uFF0C\u65E0\u767B\u5F55\u67E5\u8BE2\u516C\u5F00\u5E93\u5B58\u4E0E\u6807\u4EF7\uFF1B\u51C6\u5907\u4E13\u7528 SSH \u5BC6\u94A5\u4E0E\u72EC\u7ACB\u8FDE\u63A5\u914D\u7F6E\uFF0C\u521B\u5EFA\u6216\u5F00\u673A\u65F6\u5B89\u88C5\u516C\u94A5\u3002\u9884\u89C8\u6216\u6267\u884C\u521B\u5EFA\u3001\u5F00\u5173\u673A\u53CA\u4FDD\u5B58\u955C\u50CF\u3002\u7531\u672C\u5730\u5DE5\u4F5C\u533A\u81EA\u5EFA\uFF0C\u4E0E AutoDL \u5B98\u65B9\u65E0\u96B6\u5C5E\u5173\u7CFB\u3002",
     developerName: "Puiching-Memory",
     category: "Productivity",
     capabilities: [
@@ -21564,10 +21918,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
 export {
   AutoDLClient,
   ENDPOINTS,
+  PRO_CATALOG_ORIGIN,
+  PRO_CATALOG_PATHS,
   PUBLIC_DATA_ORIGIN,
   PUBLIC_DATA_PATH,
+  ProCatalogClient,
   PublicDataClient,
   SafeError,
+  SshManager,
   buildServer,
   connectionInfo,
   createTools,
@@ -21577,8 +21935,11 @@ export {
   loadToken,
   redact,
   requestJson,
+  requestProCatalog,
   requestPublicData,
-  scanInstances
+  scanInstances,
+  sshBootstrap,
+  validatePublicKey
 };
 /*! Bundled license information:
 

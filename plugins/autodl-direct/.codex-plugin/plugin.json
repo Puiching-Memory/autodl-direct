@@ -1,13 +1,13 @@
 {
   "name": "autodl-direct",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "description": "本地自建的 AutoDL 官方 API 集成。",
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "AutoDL Direct",
     "shortDescription": "直接管理 AutoDL GPU 实例",
-    "longDescription": "在本机运行，直接访问 AutoDL 官方开发者 API。查询余额、Pro 实例和镜像，预览或执行创建、开关机及保存镜像；通过 Skill 配合系统 SSH 操作已有实例。由本地工作区自建，与 AutoDL 官方无隶属关系。",
+    "longDescription": "在本机运行，直接访问 AutoDL 官方开发者 API。查询余额、Pro 实例和镜像，无登录查询公开库存与标价；准备专用 SSH 密钥与独立连接配置，创建或开机时安装公钥。预览或执行创建、开关机及保存镜像。由本地工作区自建，与 AutoDL 官方无隶属关系。",
     "developerName": "Puiching-Memory",
     "category": "Productivity",
     "capabilities": [

@@ -1,0 +1,123 @@
+{
+  "observed_at": "2026-10-25T14:04:46.808Z",
+  "plugin_version": "0.1.8",
+  "server_version": {
+    "name": "autodl-direct",
+    "version": "0.1.8"
+  },
+  "tool_count": 14,
+  "credentialsConfigured": false,
+  "catalog": {
+    "source": "official_pro_console_catalog",
+    "authentication": "none; no Token or Cookie sent",
+    "api_origin": "https://www.autodl.com",
+    "api_paths": {
+      "types": "/api/v1/machine_pro/gpu_type",
+      "specs": "/api/v1/machine_pro/gpu_spec_config"
+    },
+    "observed_at": "2026-10-25T14:04:46.804Z",
+    "data_center_list": [
+      "westDC3",
+      "beijingDC2"
+    ],
+    "gpu_types": [
+      {
+        "gpu_name": "RTX 5090",
+        "idle_gpu_count": 0,
+        "total_gpu_count": 2200
+      },
+      {
+        "gpu_name": "RTX 5090 D",
+        "idle_gpu_count": 0,
+        "total_gpu_count": 192
+      },
+      {
+        "gpu_name": "vGPU-48GB-350W",
+        "idle_gpu_count": 0,
+        "total_gpu_count": 128
+      },
+      {
+        "gpu_name": "vGPU-32GB",
+        "idle_gpu_count": 0,
+        "total_gpu_count": 524
+      },
+      {
+        "gpu_name": "RTX PRO 6000",
+        "idle_gpu_count": 0,
+        "total_gpu_count": 792
+      },
+      {
+        "gpu_name": "vGPU-48GB",
+        "idle_gpu_count": 1,
+        "total_gpu_count": 330
+      },
+      {
+        "gpu_name": "H800",
+        "idle_gpu_count": 0,
+        "total_gpu_count": 24
+      },
+      {
+        "gpu_name": "RTX 4090D",
+        "idle_gpu_count": 0,
+        "total_gpu_count": 184
+      },
+      {
+        "gpu_name": "RTX 6000D",
+        "idle_gpu_count": 10,
+        "total_gpu_count": 375
+      },
+      {
+        "gpu_name": "RTX PRO 5000",
+        "idle_gpu_count": 0,
+        "total_gpu_count": 80
+      }
+    ],
+    "specs": [
+      {
+        "gpu_spec_uuid": "v-48g",
+        "spec_id": 5,
+        "name": "4090-48G",
+        "gpu_name": "vGPU-48GB",
+        "spec_name": "通用型",
+        "vcpu_range": [
+          12,
+          22
+        ],
+        "host_memory_gib_range": [
+          64,
+          100
+        ],
+        "list_yuan_per_gpu_hour": 3.03,
+        "published_level_prices": [
+          {
+            "level": "normal_user",
+            "yuan_per_gpu_hour": 3.03
+          },
+          {
+            "level": "member_user",
+            "yuan_per_gpu_hour": 2.88
+          }
+        ],
+        "price_scope": "GPU only; account level, coupon and disk charges not resolved"
+      }
+    ],
+    "request_ids": [
+      "6d174ce1ef210ef1c39ba65c16b1b008",
+      "ad34ef4913f6d39590f13d4b428f0e95"
+    ],
+    "account_final_quote": "unavailable_without_web_session",
+    "notes": [
+      "来自官网未承诺稳定的控制台只读接口；库存为地区聚合快照，不保证创建成功。",
+      "价格单位为人民币元/卡/小时。主机内存不是GPU显存；目录未提供GPU显存字段。",
+      "订单价格预览要求网页登录；标价和各等级公开价不是账户最终总价，不含未核实磁盘收费。"
+    ]
+  },
+  "key_preview": {
+    "executed": false,
+    "action": "generate_or_reuse_dedicated_ed25519"
+  },
+  "stderr": "",
+  "paid_operations": 0,
+  "remote_ssh_login": "not_tested",
+  "startup_installation": "not_tested_on_real_instance"
+}

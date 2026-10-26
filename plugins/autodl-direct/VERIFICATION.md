@@ -1,6 +1,16 @@
 # 验证记录
 
-## 当前版本 0.1.6（2026-10-19）
+## 当前版本 0.1.8（2026-10-25）
+
+本机 Node.js 24.21.0、Windows，51项离线测试通过，PowerShell脚本语法检查通过。新增3个工具，总数14。初次0.1.7安装成功后，覆盖同版本缓存因访问限制失败；最终修订以0.1.8通过正常安装脚本安装，未手工修改缓存或权限。官方 MCP 客户端从实际安装清单启动，服务版本0.1.8、工具数14。清除测试进程 Token 并指定不存在的凭据文件后，配置返回 `credentialsConfigured=false`，仍可成功查询 Pro 库存和 `vGPU-48GB` 规格价格，私有账户接口未参与。
+
+[安装后的真实 MCP 证据](../../docs/evidence/2026-10-25-pro-catalog-mcp.json) 保留接口路径、实际查询时间、库存、规格和 request_id。该次4090-48G公开标价3.03元/卡/小时、公开会员等级价2.88元/卡/小时；库存与价格只代表记录时刻。未登录订单价格预览单独实测 `AuthorizeFailed`，因此返回明确的 `account_final_quote=unavailable_without_web_session`，未将其作为账户总报价或发送开发者 Token 到网站接口。
+
+新增测试覆盖固定主机/方法/参数、无凭据请求、价格单位与主机内存语义、未知名称、登录失败、缺失/零价格、结构变化、响应大小/中断/超时/重定向，以及公钥格式、命令注入、命令长度、预览无变更。原生 OpenSSH 测试生成临时 Ed25519 密钥并验证匹配/复用、不覆盖残缺密钥、专用配置写入/刷新、`ssh -G` 解析、用户配置保护和目录链接拒绝。公钥追加与工作命令逻辑在本机 Git Bash 临时目录执行，验证保留已有密钥、处理末尾无换行、重复执行不重复追加及后续命令执行。Windows 下安装目录与 chmod 元数据操作在该测试中替换，Linux 权限与远端真实实例未验证。
+
+未创建/开关机收费实例、未收集实例明文密码、未验证真实实例启动命令、公钥远端授权、首次主机指纹核验或 SSH 登录/传输。测试用私钥仅位于受控临时目录并已删除；证据不包含私钥。当前聊天原生工具清单热刷新尚未确认，新聊天或重连插件后使用新增工具。
+
+## 历史版本 0.1.6（2026-10-19）
 
 本机 Windows、Node.js 24.21.0。重新构建随包运行的 dist/server.mjs，运行 verify.test.mjs、instances.test.mjs、public-data.test.mjs：41 项通过、0 失败、0 跳过。测试覆盖真实清单启动、公共查询不读取账户凭据、固定 GET 地址、参数校验、分页完整性、空结果、字段变化、重定向、超时与响应大小上限。
 
@@ -91,7 +101,7 @@
 | 真实多页账户/实际状态故障后的回退 | 跨页及故障模拟通过；真实账号只有一页，Query 正常 |
 | 平台定时关机 | 由列表观测与 Skill 指导；未设置或实测真实 timer |
 | 本地/远程看护、硬预算上限 | 插件未实现，不能承诺 |
-| 下载/缓存/SSH/SFTP/训练记录/完成标准 | 属于 Agent 和项目；插件不提供这些通用功能 |
+| 下载/缓存/SSH与SFTP执行/训练记录/完成标准 | 属于 Agent 和项目；0.1.7仅新增专用密钥/配置及开机公钥准备，不提供通用传输引擎 |
 | 实时价格/库存/环境兼容性 | 使用当时官方或控制台观测；未知明确报告，不猜 ID |
 | 浏览器权限、剪贴板、断连 | 宿主边界；保留原有权限和认证规则 |
 
@@ -104,7 +114,7 @@
 ```powershell
 npm.cmd ci --prefix plugins/autodl-direct/tooling --ignore-scripts --no-audit --no-fund
 node plugins/autodl-direct/tooling/build.mjs
-node --test plugins/autodl-direct/tooling/verify.test.mjs plugins/autodl-direct/tooling/instances.test.mjs plugins/autodl-direct/tooling/public-data.test.mjs
+node --test plugins/autodl-direct/tooling/*.test.mjs
 ```
 
 本机没有 npm.cmd，先前在忽略的 work/toolchain 临时准备 npm 11.6.2，按原 package-lock.json 安装依赖；本次复用依赖，未改变锁文件、全局工具或凭据。
